@@ -1,0 +1,80 @@
+body {
+    display: block;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    margin: 0;
+
+    font-family: 'Lobster', cursive;
+    font-weight: 100;
+}
+
+background {
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    background-color: rgb(0,0,50);
+}
+
+img {
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    position: absolute;
+
+    opacity: 0;
+
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+
+    -webkit-transition-duration: 1s; /* Safari */
+    transition-duration: 1s;
+    -webkit-transition-timing-function: ease; /* Safari and Chrome */
+    transition-timing-function: ease; 
+}
+
+quoter {
+    display: block;
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    right: 10%;
+
+    padding: 20px;
+    border-radius: 10px;
+
+    color: black;
+
+    background-color: rgba(255,255,255,0.3);
+
+    z-index: 2;
+}
+
+#get-new {
+    float: right;
+    margin-left: 20px;
+    cursor: pointer;
+}
+
+#get-new:hover, #share:hover {
+    transform: scale(1.5,1.5);
+    -webkit-transform: scale(1.5,1.5);
+}
+
+#get-new:active, #share:active {
+    color: wheat;
+}
+
+#share {
+    color: black;
+    float: right;
+}
+
+.controls {
+    margin-top: 10px;
+}
