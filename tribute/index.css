@@ -1,0 +1,114 @@
+html body {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+    margin: 0;
+    padding: 0;
+
+    position: absolute;
+    user-select: none;
+    -webkit-user-select: none;
+
+    font-size: 17px;
+    font-family: Helvetica Neue;
+    font-weight: 200
+}
+
+background {  
+    display: block;
+
+    padding: 50px;
+    background-color: rgba(144, 238, 144, 0.2);
+}
+
+tribute {
+    display: block;
+
+    background-color: lightgray;
+    border-radius: 5px;
+
+    padding: 20px 40px;
+}
+
+tribute-title {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+}
+
+titler {
+    display: block;
+    font-size: 30px;
+    font-weight: 300;
+}
+
+note {
+    display: block;
+    font-size: 20px;   
+}
+
+pic {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+}
+
+summary {
+    display: block;
+    margin-top: 40px;
+    text-align: justify;
+}
+
+timeline {
+    display: block;
+    margin-top: 30px;
+}
+
+timeline-title {
+    display: block;
+    font-size: 25px;
+    
+}
+
+li {
+    font-size: 16px;
+}
+
+timer {
+    display: inline-block;
+    font-weight: 400;
+}
+
+quote {
+    display: block;
+    margin: auto;
+    margin-top: 30px;
+
+    width: 70%;
+
+    background-color: #F1F1F1;
+    border-radius: 5px;
+
+    padding: 10px;
+    text-align: justify;
+}
+
+quote-text {
+    display: block;
+}
+
+author {
+    margin-top: 10px;
+    display: block;
+    font-style: italic;
+    color: #868484;
+}
+
+director {
+    display: block;
+    margin-top: 40px;
+    font-size: 17px;
+    text-align: center;
+}
