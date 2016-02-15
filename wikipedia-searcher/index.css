@@ -1,0 +1,160 @@
+html body {
+    width: 100%;
+    min-height: 100%;
+    top: 0;
+    left: 0;
+
+    margin: 0;
+    padding: 0;
+
+    position: absolute;
+    user-select: none;
+    -webkit-user-select: none;
+
+    font-size: 20px;
+    font-family: Helvetica Neue;
+    font-weight: 200;
+
+    color: wheat;
+}
+
+background {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0; 
+    width: 100%; 
+    min-height: 100%;
+    padding-top: 50px;
+
+    box-sizing: border-box;
+
+    background: -moz-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ff3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(0,0,125,1)), color-stop(100%, rgba(0,0,0,1))); /* safari4+,chrome */
+    background:-webkit-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* safari5.1+,chrome10+ */
+    background: -o-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* opera 11.10+ */
+    background: -ms-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ie10+ */
+    background:radial-gradient(ellipse at center, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* w3c */
+}
+
+search-box {
+    display: block;
+    position: relative;
+    padding: 0;
+    border: 3px solid wheat;
+    border-radius: 30px;
+    width: 250px;
+    height: 30px;
+    margin: 0 auto;
+    /*margin-bottom: 0;*/
+    text-align: center;
+    padding: 10px;
+}
+
+#search-text {
+    background: transparent;
+    border: none;
+    width: 200px;
+    height: 27px;
+    float: left;
+    font-size: 18px;
+    font-family: Helvetica Neue;
+    font-weight: 100;
+    color: wheat;
+}
+
+#search-text:focus {
+    outline: none;
+}
+
+#search {
+    float: right;
+    color: wheat;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+#search:hover {
+    color: white;
+}
+
+#search:active {
+    transform: scale(.9,.9);
+}
+
+random {
+    display: block;
+    color: black;
+    position: relative;
+    margin: auto;
+    text-align: center;
+    background-color: wheat;
+    width: 50px;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    cursor:pointer;
+}
+
+#random {
+    padding-right: 2px;
+}
+
+random:hover #random, #random:hover {
+    color: white;
+}
+
+random:active {
+    transform: scale(.9,1);
+}
+
+results {
+    display: block;
+    position: relative;
+    margin: 50px 100px 20px;
+}
+
+result {
+    display: block;
+    padding: 5px 10px;
+    background-color: wheat;
+    color: black;
+    margin-top: 5px;
+    cursor: pointer;
+    box-shadow: inset 0px 0px 41px 5px rgba(0,0,0,0.75);
+
+    transition-duration: 0.5s;
+    -webkit-transition-duration: 0.5s;
+}
+
+result:hover {
+    box-shadow: -5px 0px 0px 0px orange;
+}
+
+result:active {
+    transform: scale(.98,.98);  
+}
+
+result-header {
+    display: block;
+    font-weight: 400;
+}
+
+result-text {
+    display: block;
+    font-size: 16px;
+    margin: 5px 0;
+    font-weight: 200;
+    text-align: justify
+}
+
+result a {
+    text-decoration: none;
+    outline: none;
+    color: black;
+}
+
+result.removed {
+    opacity: 0;
+    filter: grayscale(0.5) blur(10px);
+    -webkit-filter: grayscale(0.5) blur(10px);
+}
