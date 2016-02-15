@@ -1,0 +1,121 @@
+html body {
+    width: 100%;
+    min-height: 100%;
+    top: 0;
+    left: 0;
+
+    margin: 0;
+    padding: 0;
+
+    position: absolute;
+    user-select: none;
+    -webkit-user-select: none;
+
+    font-size: 16px;
+    font-family: Helvetica Neue;
+    font-weight: 200;
+
+    color: wheat;
+}
+
+background {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0; 
+    width: 100%; 
+    min-height: 100%;
+    padding-top: 50px;
+
+    box-sizing: border-box;
+    text-align: center;
+
+
+    background: -moz-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ff3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(0,0,125,1)), color-stop(100%, rgba(0,0,0,1))); /* safari4+,chrome */
+    background:-webkit-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* safari5.1+,chrome10+ */
+    background: -o-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* opera 11.10+ */
+    background: -ms-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ie10+ */
+    background:radial-gradient(ellipse at center, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* w3c */
+}
+
+title {
+    display: block;
+    font-weight: 400;
+    font-size: 40px;
+}
+
+streams {
+    display: block;
+    margin: 50px;
+}
+
+stream {
+    display: block;
+    margin-top: 2px;
+    min-width: 220px;
+    padding: 10px;
+
+    box-shadow: inset 0px 0px 40px 5px rgba(0,0,0,0.75);
+}
+
+stream.online {
+    background: #D7F9D7;
+}
+
+stream.offline {
+    background: #C5C5C5;
+}
+
+stream.closed {
+    background: #DE9C9C;
+}
+
+stream:not(.closed):hover {
+    box-shadow: -5px 0px 0px 0px orange;
+}
+
+stream.closed, stream.closed a {
+    cursor: not-allowed !important;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+stream-icon {
+    display: block;
+    float: left;
+    width: 60px;
+    height: 60px;
+
+    margin-left: 10px;
+
+    border-radius: 40px;
+    border: 1px solid black;
+
+    background-position: center center !important;
+    background-size: cover !important;
+}
+
+stream-name {
+    display: block;
+    float: left;
+    line-height: 60px;
+    margin: 0 20px;
+    font-weight: 400;
+}
+
+stream-description {
+    display: block;
+    float: left;
+    font-style: italic;
+    line-height: 16px;
+    margin-top: 22px;
+}
+
+clear {
+    display: block;
+    clear: left;
+}
