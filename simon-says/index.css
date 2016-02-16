@@ -68,7 +68,7 @@ wheel-shadow {
     margin: auto;
 
     border-radius: 250px;
-    box-shadow: 0 0 100px 50px rgba(0,0,0,0.75);
+    /*box-shadow: 0 0 100px 50px rgba(0,0,0,0.75);*/
     z-index: 0;
 }
 
@@ -314,4 +314,24 @@ circle.bottom-left:active, circle.bottom-right.light {
     background: rgba(25, 253, 77, 1)
 }
 
+switch {
+    display: block;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+
+    color: wheat;
+    font-size: 30px;
+
+    cursor: pointer;
+}
+
+switch:hover {
+    transform: scale(1.1,1.1);
+    color: white;
+}
+
+switch:active {
+    transform: scale(0.95, 0.95);
+}
 

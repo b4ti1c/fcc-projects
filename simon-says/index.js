@@ -1,4 +1,5 @@
 /********* RENDERING LOGIC **********/
+var render3D = true;
 
 var _3dPrinter = {
     MAX_DEPTH: 30,
@@ -37,6 +38,8 @@ _3dPrinter.apply3d = function() {
     $('wheel').css('-webkit-transform', rotation);
     $('wheel').css('-mz-transform', rotation);
 
+    $('wheel-shadow').css('box-shadow', '0 0 100px 50px rgba(0,0,0,0.75)');
+
     _3dPrinter.print($('wheel'), new Rgb(50, 50, 50), 50, _3dPrinter.ROTATE_Z * 3);
     _3dPrinter.print($('game-start'), new Rgb(255, 50, 50), 10, _3dPrinter.ROTATE_Z);
     _3dPrinter.print($('controls'), new Rgb(50, 50, 50), 10, _3dPrinter.ROTATE_Z);
@@ -49,6 +52,25 @@ _3dPrinter.apply3d = function() {
     _3dPrinter.print($('circle.bottom-left'), new Rgb(50, 50, 50), 15, _3dPrinter.ROTATE_Z * 3, true);
     _3dPrinter.print($('circle.bottom-right'), new Rgb(50, 50, 50), 15, _3dPrinter.ROTATE_Z * 3, true);
 };
+
+_3dPrinter.remove3d = function() {
+    $('wheel').css('transform', '');
+    $('wheel').css('-webkit-transform', '');
+    $('wheel').css('-mz-transform', '');
+
+    $('wheel-shadow').css('box-shadow', '');
+
+    $('wheel').css('box-shadow', '');
+    $('game-start').css('box-shadow', '');
+    $('controls').css('box-shadow', '');
+    $('screen').css('box-shadow', '');
+    $('hard-button').css('box-shadow', '');
+
+    $('circle.top-left').css('box-shadow', '');
+    $('circle.top-right').css('box-shadow', '');
+    $('circle.bottom-left').css('box-shadow', '');
+    $('circle.bottom-right').css('box-shadow', '');
+}
 
 var Rgb = function(r,g,b) {
     this.r = r;
@@ -91,7 +113,19 @@ var hardmode = false;
 
 
 $(function(){
-    _3dPrinter.apply3d();
+    render3D && _3dPrinter.apply3d();
+
+    $('switch').click(function() {
+        render3D = !render3D;
+        if(render3D) {
+            _3dPrinter.apply3d();
+            $(this).html('3D');
+        }
+        else {
+            _3dPrinter.remove3d();
+            $(this).html('2D');
+        }
+    });
     
     $('hard-button').click(function(){
         hardmode = !hardmode;
@@ -106,18 +140,18 @@ $(function(){
 
     $('circle.top-left').mousedown(function(){
         var $element = $(this);
-        _3dPrinter.print($element, new Rgb(50, 50, 50), 25, -1 * _3dPrinter.ROTATE_Z * 3, true, _3dPrinter.ROTATE_Z * 4);  
+        render3D && _3dPrinter.print($element, new Rgb(50, 50, 50), 25, -1 * _3dPrinter.ROTATE_Z * 3, true, _3dPrinter.ROTATE_Z * 4);  
         $element.mouseup(function(){
-            _3dPrinter.print($element, new Rgb(50, 50, 50), 15, -1 * _3dPrinter.ROTATE_Z, true, _3dPrinter.ROTATE_Z * 3);  
+            render3D && _3dPrinter.print($element, new Rgb(50, 50, 50), 15, -1 * _3dPrinter.ROTATE_Z, true, _3dPrinter.ROTATE_Z * 3);  
             $element.unbind('mouseup');
         });
     });
 
     $('circle:not(.top-left').mousedown(function(){
         var $element = $(this);
-        _3dPrinter.print($element, new Rgb(50, 50, 50), 25, _3dPrinter.ROTATE_Z * 5, true);
+        render3D && _3dPrinter.print($element, new Rgb(50, 50, 50), 25, _3dPrinter.ROTATE_Z * 5, true);
         $element.mouseup(function(){
-            _3dPrinter.print($element, new Rgb(50, 50, 50), 15, _3dPrinter.ROTATE_Z * 3, true);
+            render3D && _3dPrinter.print($element, new Rgb(50, 50, 50), 15, _3dPrinter.ROTATE_Z * 3, true);
             $element.unbind('mouseup');
         });
     });
