@@ -28,13 +28,20 @@ background {
     display: block;
 
     width: 100%;
-    height: 100%;
+    min-height: 100%;
 
-    background: rgba(0,0,124,0.3) center center / cover no-repeat;
+    background: -moz-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ff3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(0,0,125,1)), color-stop(100%, rgba(0,0,0,1))); /* safari4+,chrome */
+    background:-webkit-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* safari5.1+,chrome10+ */
+    background: -o-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* opera 11.10+ */
+    background: -ms-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ie10+ */
+    background:radial-gradient(ellipse at center, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* w3c */
 
     padding: 50px;
 
     box-sizing: border-box;
+
+    background-size: cover !important;
 }
 
 location {
@@ -82,11 +89,12 @@ toggle {
     font-size: 30px;
     text-align: center;
 
-    position: absolute;
+    /*position: absolute;
     left: 0;
     right: 0;
     bottom: 100px;
-    margin: auto;
+    */
+    margin: 100px auto 50px;
 
     background-color: rgba(0,0,0,0.7);
     border: 1px solid wheat;

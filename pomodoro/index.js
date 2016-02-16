@@ -94,6 +94,14 @@ var writeMarkers = function() {
 
 
 $(function(){
+    $('logo').mouseover(function(){
+      $('clock').addClass('hovered');
+    });
+  
+    $('logo').mouseout(function(){
+      $('clock').removeClass('hovered');
+    });
+  
     $('clock, logo').mousedown(function(e){
         var $clock = $('clock');
         var $logo = $('logo');
@@ -180,5 +188,5 @@ $(function(){
         }    
     });
 
-    setClockValue(0.5554);
+    setClockValue(0.11485);
 });

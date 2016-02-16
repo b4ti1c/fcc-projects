@@ -93,7 +93,7 @@ navigator.geolocation.getCurrentPosition(function(pos){
 setInterval(function(){
     var time = new Date().toString().match(/(?:\s)\d\d:\d\d/)[0].slice(1);
     $('time').html(time);
-}, 500);
+}, 5000);
 
 $(function(){
     $('toggle').click(function(){
