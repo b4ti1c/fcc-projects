@@ -1,0 +1,140 @@
+html body {
+    width: 100%;
+    min-height: 100%;
+    top: 0;
+    left: 0;
+
+    margin: 0;
+    padding: 0;
+
+    position: absolute;
+    user-select: none;
+    -webkit-user-select: none;
+
+    font-size: 30px;
+    font-family: fantasy;
+    font-weight: 200;
+
+    color: wheat;
+}
+
+background {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0; 
+    width: 100%; 
+    min-height: 100%;
+
+    box-sizing: border-box;
+    text-align: center;
+
+
+    background: -moz-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ff3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, rgba(0,0,125,1)), color-stop(100%, rgba(0,0,0,1))); /* safari4+,chrome */
+    background:-webkit-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* safari5.1+,chrome10+ */
+    background: -o-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* opera 11.10+ */
+    background: -ms-radial-gradient(center, ellipse cover, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* ie10+ */
+    background:radial-gradient(ellipse at center, rgba(0,0,125,1) 0%, rgba(0,0,0,1) 100%); /* w3c */
+}
+
+tictactoe {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+
+    width: 300px;
+    height: 300px;
+}
+
+column {
+    display: inline-block;
+
+    width: 100px;
+    height: 300px;
+
+    box-sizing: border-box;
+    border-radius: 5px;
+
+}
+
+column:not(:first-child) {
+    border-left: 1px solid white;
+}
+
+row {
+    display: block;
+    width: 100px;
+    height: 100px;
+    box-sizing: border-box;
+
+    line-height: 120px;
+    font-size: 60px;
+    text-align: center;
+
+    cursor: default;
+    border-radius: 5px;
+}
+
+row:not(:first-child) {
+    border-top: 1px solid white;
+}
+
+row.empty:hover {
+    cursor: pointer;
+    background: rgba(0,0,0,0.25);
+}
+
+row.winner {
+    background-color: rgba(255,255,255,0.25);
+
+    text-shadow:
+       -1px -1px 0 black,  
+        1px -1px 0 black,
+        -1px 1px 0 black,
+         1px 1px 0 black;
+}
+
+choice {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+
+    width: 350px;
+    height: 350px;
+
+    background-color: rgba(0,0,0,0.75);
+    border-radius: 30px;
+}
+
+choice-x, choice-o, choice-or {
+    display: inline-block;
+    cursor: default;
+
+    font-size: 150px;
+    line-height: 150px;
+    margin: 125px 0;
+
+    text-shadow:
+       -1px -1px 0 black,  
+        1px -1px 0 black,
+        -1px 1px 0 black,
+         1px 1px 0 black;
+}
+
+choice-x, choice-o {
+    cursor: pointer;
+}
+
+choice-x:hover, choice-o:hover {
+    color: white;
+    transform: scale(1.1,1.1);
+}
