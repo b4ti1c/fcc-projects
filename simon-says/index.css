@@ -200,21 +200,21 @@ hard-button {
     border-radius: 15px;
     border: 5px solid rgb(50,50,50);
     box-sizing: border-box;
-    background: red;
+    background: lightgreen;
 
     cursor: pointer;
 }
 
 hard-button:hover {
-    background: darkred;
+    background: green;
 }
 
 hard-button.active {
-    background: lightgreen;
+    background: red;
 }
 
 hard-button.active:hover {
-    background: green;
+    background: darkred;
 }
 
 hard-button:active {
@@ -290,29 +290,30 @@ circle.top-right:hover {
     background: rgba(81, 80, 144, 1)
 }
 
-circle.bottom-right:hover {
-    background: rgba(128, 59, 59, 1)
-}
-
 circle.bottom-left:hover {
     background: rgba(61, 136, 78, 1)
 }
 
+circle.bottom-right:hover {
+    background: rgba(128, 59, 59, 1)
+}
+
 circle.top-left:active, circle.top-left.light {
-    background: rgba(255, 200, 100, 1)
+    background: rgba(255, 235, 0, 1)
 }
 
 circle.top-right:active, circle.top-right.light {
     background: rgba(36, 43, 255, 1)
 }
 
-circle.bottom-right:active, circle.bottom-left.light {
+circle.bottom-left:active, circle.bottom-left.light {
+    background: rgba(25, 253, 77, 1)
+}
+
+circle.bottom-right:active, circle.bottom-right.light {
     background: rgba(245, 34, 43, 1)
 }
 
-circle.bottom-left:active, circle.bottom-right.light {
-    background: rgba(25, 253, 77, 1)
-}
 
 switch {
     display: block;
