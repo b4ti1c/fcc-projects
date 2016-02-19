@@ -1,0 +1,74 @@
+@import compass
+
+$primary: wheat
+$secondary: black
+$bg-color: rgb(0,0,125)
+$light-bg: rgba(255,255,255,0.1)
+$font: Helvetica Neue
+
+html
+    body
+        width: 100%
+        height: 100%
+        top: 0
+        left: 0
+        margin: 0
+        padding: 0
+        position: absolute
+        @include user-select(none)
+        font-size: 20px
+        font-family: $font
+        font-weight: 100
+        color: $primary
+        +text-shadow(-1px -1px 0 $secondary, 1px -1px 0 $secondary, -1px 1px 0 $secondary, 1px 1px 0 $secondary)
+
+background
+    display: block
+    width: 100%
+    min-height: 100%
+    padding: 50px
+    box-sizing: border-box
+    +background-image(radial-gradient(center center, $bg-color 0%, $secondary 100%))
+    background-size: cover
+
+tbody
+    tr
+        cursor: pointer
+        td 
+            cursor: pointer
+            vertical-align: middle
+        &:nth-child(even)
+            background: $light-bg
+
+        &:hover 
+            background: rgba(255,255,255,0.3)
+        &:last-child
+            td:first-child
+                border-bottom-left-radius: 15px
+            td:last-child
+                border-bottom-right-radius: 15px
+
+th
+    background: $light-bg
+    &:first-child
+        border-top-left-radius: 15px
+    &:last-child
+        border-top-right-radius: 15px
+
+.board
+    background: $light-bg !important
+    border-radius: 15px
+
+.sorter
+    text-decoration: underline
+    cursor: pointer
+    &:hover
+        color: white
+    &:active
+        color: lightgray
+    &.selected
+        font-style: italic
+
+.userpic
+    border: 1px solid wheat
+    border-radius: 15%
