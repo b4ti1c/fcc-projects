@@ -1,0 +1,81 @@
+@import compass
+
+$primary: wheat
+$secondary: black
+$bg-color: rgb(0,0,125)
+$light-bg: rgba(255,255,255,0.1)
+$dark-bg: rgba(255,255,255,0.3)
+$black-overlay: rgba(0,0,0,0.3)
+$font: Helvetica Neue
+
+html
+    body
+        width: 100%
+        height: 100%
+        top: 0
+        left: 0
+        margin: 0
+        padding: 0
+        position: absolute
+        @include user-select(none)
+        font-size: 14px
+        font-family: $font
+        font-weight: 100
+        color: $primary
+        +text-shadow(-1px -1px 0 $secondary, 1px -1px 0 $secondary, -1px 1px 0 $secondary, 1px 1px 0 $secondary)
+
+background
+    display: block
+    width: 100%
+    min-height: 100%
+    padding: 50px
+    box-sizing: border-box
+    +background-image(radial-gradient(center center, $bg-color 0%, $secondary 100%))
+    background-size: cover
+
+.panel
+    background: $black-overlay
+
+.well
+    padding: 10px
+    background: $light-bg
+
+.btn-primary
+    background: wheat
+    color: black
+    margin-right: 13px
+    border: none
+    &:hover
+        color: white
+        background: wheat
+    &:active, &:focus, &:active:focus
+        color: white
+        background: darken(wheat, 75%)
+
+.btn-danger
+    background: darken(wheat, 75%)
+    color: white
+    margin-right: 13px
+    border: none
+    &:hover
+        color: wheat
+        background: darken(wheat, 75%)
+    &:active, &:focus, &:active:focus
+        color: black
+        background: wheat
+
+.modal-content
+    background: rgba(0,0,0,0.8)
+
+#editor-name, #editor-ingredients
+    width: 100%
+    border-radius: 5px
+    background: #CACFE6
+    color: $secondary
+    font-weight: 200
+    padding: 5px
+    +text-shadow(none)
+
+#editor-ingredients
+    height: 130px
+    resize: vertical
