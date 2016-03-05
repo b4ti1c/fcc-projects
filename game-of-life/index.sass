@@ -1,0 +1,81 @@
+@import compass
+
+$primary: wheat
+$secondary: black
+$bg-color: rgb(0,0,125)
+$light-bg: rgba(255,255,255,0.1)
+$dark-bg: rgba(255,255,255,0.3)
+$border-color: rgb(60,60,60)
+$font: Helvetica Neue
+
+html
+    body
+        width: 100%
+        height: 100%
+        top: 0
+        left: 0
+        margin: 0
+        padding: 0
+        position: absolute
+        @include user-select(none)
+        font-size: 20px
+        font-family: $font
+        font-weight: 100
+        color: $primary
+        +text-shadow(-1px -1px 0 $secondary, 1px -1px 0 $secondary, -1px 1px 0 $secondary, 1px 1px 0 $secondary)
+
+background
+    display: block
+    width: 100%
+    min-height: 100%
+    padding: 50px
+    box-sizing: border-box
+    +background-image(radial-gradient(center center, $bg-color 0%, $secondary 100%))
+    background-size: cover
+
+starter
+    display: block
+    width: 751px
+    margin: 0 auto
+    text-align: center
+    font-size: 35px
+    i
+        cursor: pointer
+        margin-right: 10px
+        &:hover
+            color: white
+        &:active
+            transform: scale(1.1,1.1)
+
+grid
+    display: block
+    width: 751px 
+    margin: 0 auto
+
+cell
+    float: left
+    width: 10px 
+    height: 10px
+    box-sizing: border-box
+    border-top: 1px solid $border-color
+    border-left: 1px solid $border-color
+    cursor: pointer
+    &:nth-child(75n)
+        width: 11px
+        border-right: 1px solid $border-color
+    &:nth-child(n+3676)
+        height: 11px
+        border-bottom: 1px solid $border-color
+    &.alive
+        +background-image(radial-gradient(center center, $primary 0%, darken($primary, 100%) 100%))
+
+#gen-display
+    display: inline-block
+    font-size: 18px
+    margin-right: 10px
+
+#speed-control
+    display: inline-block
+    font-size: 18px
+    margin-left: 10px
+
