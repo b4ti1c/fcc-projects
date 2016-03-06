@@ -1,22 +1,46 @@
 class EventManager {
     constructor() {
         this.objects = [];
+        this.objectsByName = {};
+        this.creatures = [];
+    }
+
+    randomName() {
+        return 'abcdefghjkilmnoprsqtuvwxyz'.split('').sort(_ => Math.random() > 0.5).slice(-8).join('');
+    }
+
+    getObjects() {
+        return Object.keys(this.objects).map(ident => this.objects[ident]);
     }
 
     register(obj) {
         this.objects.push(obj);
+
+        setTimeout(() => {
+            if (obj.name) {
+                this.creatures.push(obj);
+
+                if (!this.objectsByName[obj.name]) this.objectsByName[obj.name] = [];
+                this.objectsByName[obj.name].push(obj);
+            }
+        }, 0);
     }
 
     unregister(obj) {
         this.objects = this.objects.filter(object => object != obj);
+
+        if (obj.name && this.objectsByName[obj.name])
+            delete this.objectsByName[obj.name]
     }
 
     dispatch(eventName, opt_name, ...params) {
-        setTimeout(() => {
-            this.objects
-                .filter(obj => opt_name ? opt_name == obj.name : true)
-                .forEach(obj => obj[eventName] && obj[eventName](...params));
-        }, 0);
+        this.objects
+            .filter(obj => opt_name ? opt_name == obj.name : true)
+            .forEach(obj => obj[eventName] && obj[eventName](...params));
+    }
+
+    dispatchByName(eventName, name, ...params) {
+        this.objectsByName[name].forEach(obj => obj[eventName] && obj[eventName](...params));
     }
 }
 
@@ -25,21 +49,13 @@ const EM = new EventManager();
 class PlayerManager {
     constructor() {}
 
+    register(player) { this.player = player; }
     get(prop) { return this.player[prop]; }
 
-    getTop() { return this.top; }
-    getLeft() { return this.left; }
-    getVision() { return this.vision; }
-    getSize() { return this.size };
-
-    update(player) {
-        this.size = player.size;
-        this.top = player.top;
-        this.left = player.left;
-        this.vision = player.vision;
-
-        this.player = player;
-    }
+    getTop() { return this.player.top; }
+    getLeft() { return this.player.left; }
+    getVision() { return this.player.vision; }
+    getSize() { return this.player.size };
 }
 
 const PM = new PlayerManager();
@@ -78,9 +94,58 @@ class GameManager {
             const attackRange = Math.pow(self.range * CellSize + (creature.size / 2), 2);
 
             const canAttack = dX + dY <= attackRange;
-            return false;
+            return canAttack;
         });
     }
+
+    getOtherCreatures(self) {
+        let creatures = {
+            self: self,
+            all: [],
+            canSee: [],
+            canAttack: []
+        };
+
+        EM.creatures.forEach(creature => {
+            if (!creature.name) return;
+            if (creature == self) return;
+            creatures.all.push(creature);
+
+            const dX = Math.pow((self.state.top + self.size / 2) - (creature.state.top + creature.size / 2), 2);
+            const dY = Math.pow((self.state.left + self.size / 2) - (creature.state.left + creature.size / 2), 2);
+            const vision = Math.pow(self.vision * CellSize + (creature.size / 2), 2);
+            const attackRange = Math.pow(self.range * CellSize + (creature.size / 2), 2);
+
+            if (dX + dY < vision) creatures.canSee.push(creature);
+            if (dX + dY <= attackRange) creatures.canAttack.push(creature);
+        });
+
+        return creatures;
+    }
+
+    playerMove(key) {
+        PM.player
+            .move(key)
+            .then(() => EM.dispatch('updateOverlayState'))
+            .then(() => this.focusToPlayer());
+    }
+
+    playerAttack() {
+        PM.player.attack();
+    }
+
+    focusToPlayer() {
+        const minTop = document.body.scrollTop + 10 * CellSize;
+        const maxTop = document.body.scrollTop + document.body.clientHeight - 10 * CellSize;
+        const minLeft = document.body.scrollLeft + 10 * CellSize;
+        const maxLeft = document.body.scrollLeft + document.body.clientWidth - 10 * CellSize;
+
+        if (PM.getTop() < minTop) document.body.scrollTop = PM.getTop() - 10 * CellSize;
+        if (PM.getTop() > maxTop) document.body.scrollTop = PM.getTop() + 10 * CellSize - document.body.clientHeight;
+        if (PM.getLeft() < minLeft) document.body.scrollLeft = PM.getLeft() - 10 * CellSize;
+        if (PM.getLeft() > maxLeft) document.body.scrollLeft = PM.getLeft() + 10 * CellSize - document.body.clientWidth;
+    }
+
 }
 
 const GM = new GameManager();
@@ -135,10 +200,7 @@ class Cell extends React.Component {
 
     render() {
         const classes = this.name ? 'creature ' + this.name : '';
-
         let bgTexture = this.state.texture;
-
-        const innerHtml = '';//this.props.i + ',' + this.props.j;
         let cellContent;
 
         if (this.name) {
@@ -248,7 +310,7 @@ class Creature extends Cell {
     }
 
     move(direction) {
-        this
+        return this
             .beforeMove(direction, this.speed)
             .then(speed => {
                 switch (direction) {
@@ -267,8 +329,9 @@ class Creature extends Cell {
                 }
 
                 this.setState({top: this.top, left: this.left});
+                return {direction, speed};
             })
-            .then(() => this.afterMove())
+            .then(moveInfo => this.afterMove(moveInfo))
             .catch(err => console.log(err));
     }
 
@@ -304,7 +367,7 @@ class Creature extends Cell {
         if (direction == 'Left') nextPos.left -= speed;
         if (direction == 'Right') nextPos.left += speed;
 
-        const available = GM.getNearbyCreatures(this).concat(GM.getWalls()).reduce((pre, cell) => {
+        const available = GM.getOtherCreatures(this).canSee.concat(GM.getWalls()).reduce((pre, cell) => {
             return pre && (nextPos.top >= cell.state.top + cell.size ||
                            nextPos.top + this.size <= cell.state.top ||
                            nextPos.left >= cell.state.left + cell.size ||
@@ -318,7 +381,7 @@ class Creature extends Cell {
     }
 
     afterMove() {
-        this.updateOverlayState();
+        this.updateOverlayState();        
     }
 
 
@@ -332,7 +395,7 @@ class Creature extends Cell {
     }
 
     damage(target) {
-        target.health -= this.power;
+        //target.health -= this.power;
         target.onDamaged();
     }
 
@@ -386,24 +449,18 @@ class Player extends Creature {
 
         this.top = 300;
         this.left = 100;
-        this.vision = 7;//2.5;
+        this.vision = 7;
 
         this.speed= 10;
 
         this.range = 1;
 
-        PM.update(this);
-    }
-
-    afterMove() {
-        PM.update(this);
-        EM.dispatch('updateOverlayState');
+        PM.register(this);
     }
 
     onAttack() {
-        console.log("begin", GM.getCreaturesInAttackingRange(this));
-        const target = GM.getCreaturesInAttackingRange(this)[0];
-
+        console.log("begin", GM.getOtherCreatures(this));
+        const target = GM.getOtherCreatures(this).canAttack[0];
         target && this.damage(target);
     }
 
@@ -439,12 +496,12 @@ class GameWindow extends React.Component {
                e.keyIdentifier == 'Down'){
 
                 e.preventDefault(); 
-                EM.dispatch('move', 'player', e.keyIdentifier);
+                GM.playerMove(e.keyIdentifier);
             }
 
             if (e.keyIdentifier == 'U+0020') { //Space
                 e.preventDefault(); 
-                EM.dispatch('attack', 'player');
+                GM.playerAttack();
             }
         });
     }
