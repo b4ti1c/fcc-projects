@@ -45,6 +45,15 @@ cell
         z-index: 2
     &.player
         z-index: 3
+    playerrange 
+        background: rgba(255,255,255,0.2)
+        position: absolute
+        top: 0
+        left: 0
+        border-radius: 50%
+        display: block
+        box-sizing: border-box
+        z-index: 1
 
 cell-overlay 
     display: block
@@ -64,10 +73,12 @@ cell-overlay
         background: black
 
 cell-content
+    position: absolute
     text-align: center
     width: 100%
     height: 100%
     background-size: cover
+    z-index: 2
     
 hud
     display: block
@@ -75,14 +86,5 @@ hud
     bottom: 20px
     left: 20px
     huditem
-        display: inline-block
-        margin-left: 15px    
-    health
-        display: inline-block
-        margin-left: 15px
-    damage
-        display: inline-block
-        margin-left: 15px
-    level
         display: inline-block
         margin-left: 15px

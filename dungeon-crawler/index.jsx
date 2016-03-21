@@ -1,4 +1,4 @@
-const CellSize = 10;
+const CellSize = 40;
 const MapSize = 75;
 
 class EventManager {
@@ -138,6 +138,8 @@ class GameManager {
     }
 
     playerMove(key) {
+        if (PM.player.dead) return;
+
         PM.player
             .move(key)
             .then(() => EM.dispatch('updateOverlayState'))
@@ -145,6 +147,8 @@ class GameManager {
     }
 
     playerAttack() {
+        if (PM.player.dead) return;
+
         PM.player.attack();
     }
 
@@ -173,6 +177,15 @@ const Textures = {
     ZOMBIE: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/256/Zombie-icon.png)',
     ZOMBIE_ATT: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Voodoo-Doll-icon.png)',
     ZOMBIE_DMG: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Slimer-icon.png)',
+    SKELETON: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Slasher-icon.png)',
+    SKELETON_ATT: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Voodoo-Doll-icon.png)',
+    SKELETON_DMG: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Scream-icon.png)',
+    IMP: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Ghoul-icon.png)',
+    IMP_ATT: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Voodoo-Doll-icon.png)',
+    IMP_DMG: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Freddie-icon.png)',
+    BOSS: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Red-Skull-icon.png)',
+    BOSS_ATT: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Sea-Monster-icon.png)',
+    BOSS_DMG: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Slasher-2-icon.png)',
     DEAD: 'url(http://icons.iconarchive.com/icons/aha-soft/desktop-halloween/128/Skull-and-bones-icon.png)',
     HEALTH: 'url(http://vignette2.wikia.nocookie.net/teamfortress/images/c/cc/Health_icon_TF2.png/revision/latest?cb=20130711173303)',
     SPEED: 'url(http://www.free-icons-download.net/images/speed-skating-event-icon-67554.png)',
@@ -257,6 +270,30 @@ class Cell extends React.Component {
             cellContent = <cell-overlay class={overlayState}>{this.state.displayText}</cell-overlay>
         }
 
+        let playerRange = '';
+
+        if (this.name == 'player') {
+            const size = (this.state.range * 2) * CellSize + 10;
+            const offset = (40 - size) / 2;
+
+            //CellSize = 40
+            //40 * (2 * range) + 10 = end
+            //end - 40 / 2 = offset
+
+            //40 40 0 0
+            //90 90 -25 -25 -> 1
+            //170 170 -65 -65 -> 2
+            //250 250 -105 -105 ->3
+
+            playerRange = <playerrange style={{
+                    "width": size + 'px',
+                    "height": size + 'px',
+                    "top": offset + 'px',
+                    "left": offset + 'px'
+                }}></playerrange>
+        }
+
+
         return (
             <cell style={{
                 "top": this.state.top + 'px',
@@ -266,6 +303,7 @@ class Cell extends React.Component {
                 "backgroundImage": bgTexture
             }} className={classes}>
                 {cellContent}
+                {playerRange}
             </cell>
         );
     }
@@ -400,8 +438,13 @@ class Creature extends Cell {
 
         setTimeout(() => {
             if (this.attTexture) {
-                if (!this.dead)
+                if (!this.dead) {
                     this.setState({texture: bfrTexture});
+                    if (!bfrTexture) {
+                        this.setState({texture: this.texture});
+                    }
+                } else
+                    this.setState({texture: Textures.DEAD});
                 // if (this.health <= this.maxHealth * 0.3)
                 //     this.setState({texture: this.dmgTexture})
                 // else
@@ -429,12 +472,18 @@ class Creature extends Cell {
         if (direction == 'Left') nextPos.left -= speed;
         if (direction == 'Right') nextPos.left += speed;
 
-        const available = GM.getOtherCreatures(this).canSee.concat(GM.getWalls()).reduce((pre, cell) => {
+        const creatures = GM.getOtherCreatures(this);
+
+        const available = creatures.canSee.concat(GM.getWalls()).reduce((pre, cell) => {
             return pre && (nextPos.top >= cell.state.top + cell.size ||
                            nextPos.top + this.size <= cell.state.top ||
                            nextPos.left >= cell.state.left + cell.size ||
                            nextPos.left + this.size <= cell.state.left);
         }, true);
+
+        if (this.name == 'player') {
+            creatures.canSee.forEach(creature => !creature.mover && creature.moveRandom && creature.moveRandom());
+        }
 
         if (available)
             return Promise.resolve(speed);
@@ -501,7 +550,7 @@ class NPC extends Creature {
 
         // this.size = CellSize;
 
-        this.moveRandom();
+        //this.moveRandom();
     }
 
 
@@ -554,14 +603,71 @@ class Zombie extends NPC {
         this.dmgTexture = Textures.ZOMBIE_DMG;
         this.attTexture = Textures.ZOMBIE_ATT;
         this.size = CellSize;
-        this.xp = 10;
+        this.xp = 5;
         this.vision = 2;
         this.range = 1;
         this.power = 2;
-        this.speed = 3;
+        this.speed = 6;
         this.attackSpeedHz = 1;
         this.health = 10;
         this.maxHealth = 10;
+    }
+}
+
+class Skeleton extends NPC {
+    constructor(props) {
+        super(props);
+        this.name = 'skeleton';
+        this.texture = Textures.SKELETON;
+        this.dmgTexture = Textures.SKELETON_DMG;
+        this.attTexture = Textures.SKELETON_ATT;
+        this.size = CellSize * 1.35;
+        this.xp = 7;
+        this.vision = 3;
+        this.range = 1.25;
+        this.power = 5;
+        this.speed = 10;
+        this.attackSpeedHz = 1.25;
+        this.health = 20;
+        this.maxHealth = 20;
+    }
+}
+
+class Imp extends NPC {
+    constructor(props) {
+        super(props);
+        this.name = 'imp';
+        this.texture = Textures.IMP;
+        this.dmgTexture = Textures.IMP_DMG;
+        this.attTexture = Textures.IMP_ATT;
+        this.size = CellSize * 1.8;
+        this.xp = 15;
+        this.vision = 7;
+        this.range = 1.5;
+        this.power = 5;
+        this.speed = 28;
+        this.attackSpeedHz = 1.5;
+        this.health = 40;
+        this.maxHealth = 40;
+    }
+}
+
+class Boss extends NPC {
+    constructor(props) {
+        super(props);
+        this.name = 'boss';
+        this.texture = Textures.BOSS;
+        this.dmgTexture = Textures.BOSS_DMG;
+        this.attTexture = Textures.BOSS_ATT;
+        this.size = CellSize * 4;
+        this.xp = 100;
+        this.vision = 10;
+        this.range = 3;
+        this.power = 25;
+        this.speed = 4;
+        this.attackSpeedHz = 1;
+        this.health = 500;
+        this.maxHealth = 150;
     }
 }
 
@@ -574,19 +680,20 @@ class Player extends Creature {
 
         this.top = Math.floor(startingRoom.cY) * CellSize;
         this.left = Math.floor(startingRoom.cX) * CellSize;
-        this.vision = 200;
+        this.vision = 3.5;
 
         this.xp = 0;
 
         this.speed= 5;
 
         this.range = 1;
+        this.state.range = this.range;
 
         this.power = 3;
 
         this.weapon = 'Punch';
 
-        this.size = 10;
+        this.size = CellSize;
 
         this.health = 10;
         this.maxHealth = 10;
@@ -642,12 +749,13 @@ class Player extends Creature {
             this.level++;
             this.maxHealth = this.level * 10;
             this.health = this.maxHealth;
-            EM.hud.update(this);
         }
+
+        EM.hud.update(this);
     }
 
     regenerate() {
-        setInterval(() => {
+        this.regenerationInterval = setInterval(() => {
             const amount = (this.level / 4) / 16;
             if (this.health < this.maxHealth) {
                 this.health += amount;
@@ -657,6 +765,12 @@ class Player extends Creature {
                 EM.hud.update(this);
             }
         },250);
+    }
+
+    onDie() {
+        super.onDie();
+        clearInterval(this.regenerationInterval);
+        this.regenerationInterval = undefined;
     }
 }
 
@@ -681,7 +795,7 @@ class PlayerHUD extends React.Component {
                 <huditem>Vision: {this.state.player.vision}</huditem>
                 <huditem>Walk Speed: {this.state.player.speed}</huditem>
                 <huditem>Att. Range: {this.state.player.range.toFixed(2)}</huditem>
-                <huditem>Att. Speed (Hz): {this.state.player.attackSpeedHz.toFixed(2)}</huditem>
+                <huditem>Att. Per Sec.: {this.state.player.attackSpeedHz.toFixed(2)}</huditem>
                 <huditem>XP: {this.state.player.xp} / {this.state.player.level * (this.state.player.level + 1) * 10 / 2}</huditem>
             </hud>
         );
@@ -725,7 +839,7 @@ class Speed extends PickUp {
     }
 
     affect(player) {
-        player.speed += Math.floor(Math.random() * 3) + 1;      
+        player.speed += Math.floor(Math.random() * 7) + 1;      
         this.setState({used: true});
     }
 }
@@ -767,6 +881,7 @@ class Range extends PickUp {
     affect(player) {
         player.range += Math.random();      
         this.setState({used: true});
+        player.setState({range: player.range});
     }
 }
 
@@ -785,7 +900,7 @@ class Knife extends PickUp {
 
     affect(player) {
         player.weapon = 'Knife';
-        player.power = 10; 
+        player.power = 7; 
         this.setState({used: true});
     }    
 }
@@ -798,7 +913,7 @@ class Katana extends PickUp {
 
     affect(player) {
         player.weapon = 'Katana';
-        player.power = 30; 
+        player.power = 15; 
         this.setState({used: true});
     } 
 }
@@ -811,7 +926,7 @@ class Halberd extends PickUp {
 
     affect(player) {
         player.weapon = 'Halberd';
-        player.power = 50; 
+        player.power = 20; 
         this.setState({used: true});
     }  
 }
@@ -821,15 +936,18 @@ class GameWindow extends React.Component {
     constructor() {
         super();
         this.state = {};
+        this.state.gameEnd = false;
         this.state.pickups = [];
         this.state.player = <Player/>;
         this.state.pickups = rooms.map((room, id) => {
+            if (id == rooms.length - 1) return ('');
+
             let pickup = '';
             let pickup2 = '';
 
-            if (Math.random() > 0.3) {
+            if (Math.random() > 0.1) {
                 pickup = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
-                if (Math.random() > 0.6) {
+                if (Math.random() > 0.5) {
                     pickup2 = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
                 }
             }
@@ -839,45 +957,48 @@ class GameWindow extends React.Component {
                     {pickup}
                     {pickup2}
                 </div>
-                
-
-                // <Cell i={pos.y} j={pos.x} displayText={id.toString()}/>
-
-                //<Zombie key={id} top={pos.y * CellSize} left={pos.x * CellSize} displayText={id.toString()}/>
             );
         });
 
         this.state.creatures = rooms.map((room, id) => {
-            const pos = this.generateRandomPointInRoom(room);
+            const creature = this.generateRandomEnemyInRoom(room, id / (rooms.length - 1));
 
-            return (
-                <Zombie key={'npc' + id} top={pos.y * CellSize} left={pos.x * CellSize}/>
-            );
+            return (creature);
         });
-            // const pos = this.generateRandomPointInRoom(room);
-            // const pickup = this.generateRandomPickupInPosition(pos);
-
-        //     return (
-        //         // pickup
-
-        //         // <Cell i={pos.y} j={pos.x} displayText={id.toString()}/>
-
-        //         //<Zombie key={id} top={pos.y * CellSize} left={pos.x * CellSize} displayText={id.toString()}/>
-        //     );
-        // });
-
-        /*[
-            <Zombie key={1} top={100} kill={this.kill.bind(this, 1)}/>,
-            <Zombie key={2} kill={this.kill.bind(this, 2)}/>
-        ]; */
     }
 
     generateRandomPointInRoom(room) {
         return {
-            x: (room.x + 1) + Math.random() * (room.width - 1),
-            y: (room.y + 1) + Math.random() * (room.height - 1)
+            x: (room.x + 1) + Math.random() * (room.width - 2),
+            y: (room.y + 1) + Math.random() * (room.height - 2)
         };
     };
+
+    generateRandomEnemyInRoom(room, hardness) {
+        const pos = this.generateRandomPointInRoom(room);
+        const randomID = this.generateRandomId();
+        
+        if (hardness == 0){
+            return '';
+        } else if (hardness < 0.25) {
+            return <Zombie key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+        } else if (hardness < 0.38) {
+            if (Math.random() < 0.5)
+                return <Zombie key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+            else
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+        } else if (hardness < 0.6) {
+            return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+        } else if (hardness < 0.8) {
+            if (Math.random() < 0.5)
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+            else
+                return <Imp key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+        } else if (hardness < 1) {
+            return <Imp key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+        } else
+            return <Boss key={'npc' + randomID} top={room.cY * CellSize} left={room.cX * CellSize}/>
+    }
 
     generateRandomPickupInPosition(pos) {        
         const val = Math.floor(Math.random() * 6);
@@ -938,6 +1059,12 @@ class GameWindow extends React.Component {
         const creatures = this.state.creatures;
         const pickups = this.state.pickups;
 
+        let msg = '';
+
+        if (this.state.gameEnd) {
+            msg = 'THE END';
+        }
+
         return (
             <div>
                 <Map/>
@@ -949,6 +1076,5 @@ class GameWindow extends React.Component {
         );
     }
 }
-
 
 ReactDOM.render(<GameWindow />, $('background').get(0));
