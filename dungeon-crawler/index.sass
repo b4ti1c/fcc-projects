@@ -22,7 +22,6 @@ html
         font-family: $font
         font-weight: 100
         color: $primary
-        +text-shadow(-1px -1px 0 $secondary, 1px -1px 0 $secondary, -1px 1px 0 $secondary, 1px 1px 0 $secondary)
 
 background
     display: block
@@ -44,6 +43,8 @@ cell
         position: absolute
         color: white
         z-index: 2
+    &.player
+        z-index: 3
 
 cell-overlay 
     display: block
@@ -58,7 +59,7 @@ cell-overlay
     &.revealed:not(.fogged) 
         background: transparent
     &.revealed.fogged
-        background: rgba(0,0,0,0.8)
+        background: rgba(0,0,0,0.6)
     &:not(.revealed).fogged
         background: black
 
@@ -68,3 +69,20 @@ cell-content
     height: 100%
     background-size: cover
     
+hud
+    display: block
+    position: fixed
+    bottom: 20px
+    left: 20px
+    huditem
+        display: inline-block
+        margin-left: 15px    
+    health
+        display: inline-block
+        margin-left: 15px
+    damage
+        display: inline-block
+        margin-left: 15px
+    level
+        display: inline-block
+        margin-left: 15px
