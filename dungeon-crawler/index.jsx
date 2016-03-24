@@ -223,7 +223,7 @@ const preloadTextures = Object.keys(Textures).map(key => {
 });
 
 const SoundsToPreload = {
-    THEME: 'http://dor-lomin.com/archive/ultima/musicarchive/uo/mp3/death2-u8.mp3',
+    THEME: 'http://game-resources.hazarilhan.com/dungeon-crawler/theme.mp3',
     BOSS_GREET: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-greet.wav',
     BOSS_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-hit.wav',
     BOSS_DMG: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-dmg.wav',
@@ -307,7 +307,8 @@ class Cell extends React.Component {
     }
 
     render() {
-        const classes = this.name ? 'creature ' + this.name : '';
+        let classes = this.name ? 'creature ' + this.name : '';
+        classes += this.state.texture == Textures.DEAD ? ' dead' : '';
         let bgTexture = this.state.texture;
         let cellContent;
 
@@ -452,6 +453,11 @@ class Creature extends Cell {
         this.vision = 3;
 
         this.attacking = false;
+
+        this.state.showHealth = false;
+        this.state.health = this.health;
+
+        this.healthColor = 'rgba(154,4,36,1)';
     }
 
     move(direction) {
@@ -549,8 +555,12 @@ class Creature extends Cell {
 
         if (available)
             return Promise.resolve(speed);
-        else
-            return this.beforeMove(direction, speed - 1);
+        else {
+            if (this.name == 'player')
+                return this.beforeMove(direction, speed - 1);
+            else
+                return Promise.reject('Occupied');
+        }
     }
 
     afterMove() {
@@ -581,7 +591,9 @@ class Creature extends Cell {
     }
 
     onDamaged() {
-        console.log(this.name + ' got damaged and has health ' + this.health)
+        console.log(this.name + ' got damaged and has health ' + this.health);
+        this.setState({health: this.health});
+        if (this.health > 0 && this.health < this.maxHealth) this.setState({showHealth: true});
         if (this.health > 0 && this.health <= this.maxHealth * 0.3) {
             if (this.dmgTexture)
                 this.setState({texture: this.dmgTexture});
@@ -597,11 +609,33 @@ class Creature extends Cell {
 
     onDie() {
         console.log('ok got dead', this);
+        this.setState({showHealth: false});
         this.dieSound.play();
         this.dead = true;
         this.setState({texture: Textures.DEAD});
     }
 
+    render() {
+        let cell = super.render();
+        if (!this.state.showHealth) return cell;
+        if (!this.state.revealed || this.state.fogged) return cell;
+
+        return (
+            <div>
+                <healthbar style={{"top": this.state.top - 13 + 'px', 
+                                  "left": this.state.left + 'px',
+                                  "width": this.size + 'px',
+                                  "border": '1px solid ' + this.healthColor
+                                }}></healthbar>
+                <healthfill style={{"top": this.state.top - 13 + 'px', 
+                                  "left": this.state.left + 'px',
+                                  "width": (this.size * this.state.health / this.maxHealth) + 'px',
+                                  "background": this.healthColor
+                                }}></healthfill>
+                {cell}
+            </div>
+        );
+    }
 }
 
 class NPC extends Creature {
@@ -683,12 +717,16 @@ class NPC extends Creature {
 
     regenerate() {
         this.regenerationInterval = setInterval(() => {
-            const amount = (this.level / 4) / 11;
+            const amount = (this.level / 4) / 16;
             if (this.health < this.maxHealth) {
                 this.health += amount;
                 if (this.health > this.maxHealth)
                     this.health = this.maxHealth;
             }
+
+            if (this.health >= this.maxHealth) this.setState({showHealth: false});
+
+            this.setState({health: this.health});
         },250);
     }
 
@@ -708,7 +746,7 @@ class NPC extends Creature {
         this.regenerate = undefined;
 
         let moddedXp = 0;
-        if (PM.player.level < this.level) moddedXp = this.xp * 1.5;
+        if (PM.player.level < this.level) moddedXp = this.xp * 1.75;
         if (PM.player.level == this.level) moddedXp = this.xp;
         if (PM.player.level > this.level) moddedXp = this.xp * this.level / PM.player.level;
 
@@ -728,14 +766,14 @@ class Zombie extends NPC {
         this.dmgSound = Sounds.ZOMBIE_DMG;
         this.dieSound = Sounds.ZOMBIE_DIE;
         this.size = CellSize;
-        this.xp = 6;
-        this.vision = 2;
+        this.xp = 9;
+        this.vision = 2.5;
         this.range = 1;
         this.power = 2;
         this.speed = 6;
-        this.attackSpeedHz = 0.6;
-        this.baseHealth = 10;
-        this.level = Math.random() > 0.5 ? 1 : 2;
+        this.attackSpeedHz = 0.5;
+        this.baseHealth = 8;
+        this.level = Math.random() > 0.25 ? 1 : 2;
     }
 }
 
@@ -751,10 +789,10 @@ class Skeleton extends NPC {
         this.dmgSound = Sounds.SKELETON_DMG;
         this.dieSound = Sounds.SKELETON_DIE;
         this.size = CellSize * 1.35;
-        this.xp =11;
-        this.vision = 3;
-        this.range = 1.25;
-        this.power = 8;
+        this.xp =21;
+        this.vision = 5;
+        this.range = 1.35;
+        this.power = 6;
         this.speed = 10;
         this.attackSpeedHz = 1;
         this.level = Math.random() > 0.5 ? 2 : 3;
@@ -774,14 +812,14 @@ class Imp extends NPC {
         this.dmgSound = Sounds.IMP_DMG;
         this.dieSound = Sounds.IMP_DIE;
         this.size = CellSize * 1.8;
-        this.xp = 23;
+        this.xp = 37;
         this.vision = 7;
         this.range = 2;
-        this.power = 8;
+        this.power = 6.5;
         this.speed = 28;
         this.attackSpeedHz = 1.5;
-        this.baseHealth = 30;
-        this.level = Math.random() > 0.5 ? 4 : 5;
+        this.baseHealth = 27;
+        this.level = Math.random() > 0.05 ? 4 : 5;
     }
 }
 
@@ -797,14 +835,14 @@ class Boss extends NPC {
         this.dmgSound = Sounds.BOSS_DMG;
         this.dieSound = Sounds.BOSS_DIE;
         this.size = CellSize * 4;
-        this.xp = 100;
+        this.xp = 150;
         this.vision = 10;
-        this.range = 6;
-        this.power = 25;
-        this.speed = 4;
+        this.range = 4;
+        this.power = 15;
+        this.speed = 5;
         this.attackSpeedHz = 1;
-        this.baseHealth = 150;
-        this.level = 10;    
+        this.baseHealth = 80;
+        this.level = 7;    
     }
 
     onDie() {
@@ -826,7 +864,7 @@ class Player extends Creature {
 
         this.xp = 0;
 
-        this.speed= 5;
+        this.speed= 3.5;
 
         this.range = 1;
         this.state.range = this.range;
@@ -854,6 +892,7 @@ class Player extends Creature {
 
         this.regenerationRate = 1;
         this.strength = 0;
+        this.healthColor = 'rgba(1,112,212,1)';
 
         PM.register(this);
 
@@ -915,8 +954,10 @@ class Player extends Creature {
         else Sounds.PLAYER_DEADLY_HIT.play();
     }
 
-    calcMinDmg() { return (this.power + this.strength) * (this.level - 1 / this.level); }
-    calcMaxDmg() { return (this.power + this.strength) * (this.level + (this.level - 1) / 10); }
+    // calcMinDmg() { return (this.power + this.strength / 5) * (this.level - 1 / this.level); }
+    calcMinDmg() { return Math.pow(this.power + this.strength / 5, 1 - 1 / this.level); }
+    calcMaxDmg() { return Math.pow(this.power + this.strength / 5, 1 + (this.level - 1) / 10); }
+    // calcMaxDmg() { return (this.power + this.strength / 5) * (this.level + (this.level - 1) / 10); }
 
     gainXP(xp) {
         this.xp += xp;
@@ -932,8 +973,9 @@ class Player extends Creature {
             this.attackSpeedHz += 0.05;
             this.vision += 0.5;
             this.speed += 1;
+            this.strength += 2;
 
-            this.regenerationRate += 0.025;
+            this.regenerationRate += 0.125;
             this.levelSound.play();
         }
 
@@ -950,6 +992,8 @@ class Player extends Creature {
 
                 EM.hud.update(this);
             }
+            if (this.health >= this.maxHealth) this.setState({showHealth: false});
+            this.setState({health: this.health});
         },250);
     }
 
@@ -965,7 +1009,7 @@ class PlayerHUD extends React.Component {
     constructor() {
         super();
         EM.hud = this;
-        this.state = {player: {health: 0, maxHealth: 0,damage: 0, level: 0, power: 0, weapon: '', vision: 0, speed: 0, range: 0, attackSpeedHz: 0, xp: 0, regenerationRate: 0}};
+        this.state = {player: {health: 0, maxHealth: 0,damage: 0, level: 0, power: 0, weapon: '', vision: 0, speed: 0, range: 0, attackSpeedHz: 0, xp: 0, regenerationRate: 0, calcMinDmg: () => 0, calcMaxDmg: () => 0}};
     }
 
     update(player) {
@@ -973,10 +1017,8 @@ class PlayerHUD extends React.Component {
     }
 
     render() {
-        const min_dmg = (this.state.player.power + this.state.player.strength) * (this.state.player.level - 1 / this.state.player.level);
-        const max_dmg = (this.state.player.power + this.state.player.strength) * (this.state.player.level + (this.state.player.level - 1) / 10);
-
-        console.log('whats the problem', this.state.player, this.state.player.regenerationRate);
+        const min_dmg = this.state.player.calcMinDmg();//(this.state.player.power + this.state.player.strength / 5) * (this.state.player.level - 1 / this.state.player.level);
+        const max_dmg = this.state.player.calcMaxDmg();//(this.state.player.power + this.state.player.strength / 5) * (this.state.player.level + (this.state.player.level - 1) / 10);
 
         return (
             <hud>
@@ -1003,8 +1045,10 @@ class PickUp extends Cell {
         this.type = 'pickup';
         this.pickupType = 'default';
         this.state.used = false;
+        this.state.shown = false;
         this.pickupSound = Sounds.PICKUP;
         this.size = CellSize / 2;
+        this.pickupText = '';
     }
 
     affect(player) {
@@ -1013,7 +1057,16 @@ class PickUp extends Cell {
     }
 
     render() {
-        if (this.state.used) return (<div></div>);
+        if (this.state.used) {
+            setTimeout(_ => this.setState({shown: true}), 1500);
+
+            if (this.state.shown) return (<div></div>);
+            else return (<pickup-text style={{"top": this.state.top + 'px', 
+                                              "left": this.state.left + 'px',
+                                              "width": '250px'}}>
+                        {this.pickupText}</pickup-text>);
+        }
+
 
         return super.render();
     }
@@ -1027,8 +1080,9 @@ class Health extends PickUp {
     }
 
     affect(player) {
+        player.health += 15;
+        this.pickupText = '+15 Health';        
         super.affect(player);
-        player.health += 15;        
     }
 }
 
@@ -1040,8 +1094,10 @@ class Speed extends PickUp {
     }
 
     affect(player) {
+        const amount = Math.floor(Math.random() * 4) + 1;
+        player.speed += amount;
+        this.pickupText = `+${amount.toFixed(2)} Walk speed`;   
         super.affect(player);
-        player.speed += Math.floor(Math.random() * 7) + 1;      
     }
 }
 
@@ -1053,9 +1109,11 @@ class AttackSpeed extends PickUp {
     }
 
     affect(player) {
+        const amount = Math.random();
+        player.attackSpeedHz += amount;
+        if (player.attackSpeedHz <= 0) player.attackSpeedHz = 5;
+        this.pickupText = `+${amount.toFixed(2)} Attack speed`;        
         super.affect(player);
-        player.attackSpeedHz += Math.random();
-        if (player.attackSpeedHz <= 0) player.attackSpeedHz = 5;        
     }
 }
 
@@ -1067,8 +1125,10 @@ class Vision extends PickUp {
     }
 
     affect(player) {
+        const amount = Math.random();
+        player.vision += amount;
+        this.pickupText = `+${amount.toFixed(2)} Vision`;              
         super.affect(player);
-        player.vision += Math.floor(Math.random() * 3) + 1;         
     }
 }
 
@@ -1080,12 +1140,14 @@ class Range extends PickUp {
     }
 
     affect(player) {
-        super.affect(player);
-        player.range += Math.random();      
+        const amount = Math.random() / 3;
+        player.range += amount;      
         player.setState({range: player.range});
+        this.pickupText = `+${amount.toFixed(2)} Attack range`;        
 
         if (player.range > player.vision)
             player.vision = player.range;
+        super.affect(player);
     }
 }
 
@@ -1097,8 +1159,10 @@ class Strength extends PickUp {
     }
 
     affect(player) {
+        const amount = Math.floor(Math.random() * 6) + 1;
+        player.strength += amount;
+        this.pickupText = `+${amount.toFixed(2)} Strength`;           
         super.affect(player);
-        player.strength += Math.floor(Math.random() * 6) + 1;     
     }
 }
 
@@ -1110,8 +1174,10 @@ class Regeneration extends PickUp {
     }
 
     affect(player) {
+        const amount = Math.random() / 1.2; 
+        player.regenerationRate += amount;  
+        this.pickupText = `+${amount.toFixed(2)} Regeneration`;           
         super.affect(player);
-        player.regenerationRate += Math.random() / 2;     
     }
 }
 
@@ -1133,12 +1199,14 @@ class Knife extends PickUp {
     }
 
     affect(player) {
+        this.pickupText = player.power <= 3 ? `Picked up Knife` : 'Dismissing weapon';           
         super.affect(player);
         if (player.power > 3) return;
 
         player.weapon = 'Knife';
         player.power = 3; 
         player.hitSound = Sounds.KNIFE;
+        
     }    
 }
 
@@ -1149,12 +1217,14 @@ class Katana extends PickUp {
     } 
 
     affect(player) {
+        this.pickupText = player.power <= 5 ? `Picked up Katana` : 'Dismissing weapon';           
         super.affect(player);
-        if (player.power > 7) return;
+        if (player.power > 5) return;
 
         player.weapon = 'Katana';
-        player.power = 7;
+        player.power = 5;
         player.hitSound = Sounds.KATANA;
+        
     } 
 }
 
@@ -1165,12 +1235,14 @@ class Halberd extends PickUp {
     }
 
     affect(player) {
+        this.pickupText = player.power <= 7 ? `Picked up Halberd` : 'Dismissing weapon';           
         super.affect(player);
-        if (player.power > 9) return;
+        if (player.power > 7) return;
 
         player.weapon = 'Halberd';
-        player.power = 9;  
+        player.power = 7;  
         player.hitSound = Sounds.HALBERD;
+        
     }  
 }
 
@@ -1243,17 +1315,17 @@ class GameWindow extends React.Component {
         
         if (hardness == 0){
             return '';
-        } else if (hardness < 0.3) {
+        } else if (hardness < 0.2) {
             return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
-        } else if (hardness < 0.5) {
-            if (Math.random() < 0.5)
+        } else if (hardness < 0.4) {
+            if (Math.random() < 0.75)
                 return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
             else
                 return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
         } else if (hardness < 0.6) {
             return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
         } else if (hardness < 0.8) {
-            if (Math.random() < 0.5)
+            if (Math.random() < 0.75)
                 return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
             else
                 return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2}/>
@@ -1330,22 +1402,22 @@ class GameWindow extends React.Component {
     componentDidMount() { 
         setTimeout(_ => GM.focusToPlayer(), 0);
 
+        const pressedKeys = [];
+        $('body').get(0).addEventListener('keyup', e => pressedKeys[e.keyIdentifier] = false );
         $('body').get(0).addEventListener('keydown', e => {
-
-            if (e.keyIdentifier == 'Right' ||
-               e.keyIdentifier == 'Left' ||
-               e.keyIdentifier == 'Up' ||
-               e.keyIdentifier == 'Down'){
-
+            pressedKeys[e.keyIdentifier] = true;
+            if (pressedKeys['Right'] || pressedKeys['Left'] || pressedKeys['Up'] || pressedKeys['Down'] || pressedKeys['U+0020'])
                 e.preventDefault(); 
-                GM.playerMove(e.keyIdentifier);
-            }
-
-            if (e.keyIdentifier == 'U+0020') { //Space
-                e.preventDefault(); 
-                GM.playerAttack();
-            }
         });
+
+        setInterval(_ => {
+            if (pressedKeys['Right']) GM.playerMove('Right');
+            if (pressedKeys['Up']) GM.playerMove('Up');
+            if (pressedKeys['Left']) GM.playerMove('Left');
+            if (pressedKeys['Down']) GM.playerMove('Down');
+
+            if (pressedKeys['U+0020']) GM.playerAttack();
+        }, 40);
     }
 
     start() {
@@ -1363,10 +1435,10 @@ class GameWindow extends React.Component {
         const creatures = this.state.creatures;
         const pickups = this.state.pickups;
 
-        let message = '';
+        let endingMessage = '';
 
         if (this.state.gameEnd) {
-            message = <ender><msg>{this.state.endMessage}</msg><rld onClick={this.restart}>Try Again</rld></ender>;
+            endingMessage = <ender><msg>{this.state.endMessage}</msg><rld onClick={this.restart}>Play Again</rld></ender>;
         }
 
         let startingMessage = '';
@@ -1381,8 +1453,9 @@ class GameWindow extends React.Component {
                                     <li> Space to attack </li>
                                     <li> Scroll around to see the map you discovered so far </li>
                                     <li> Kill the boss somewhere in the dungeon </li>
+                                    <li> Have fun! </li>
                                 </ul>
-                                <heading2>Tips</heading2>
+                                <heading2>Gamer's Guide</heading2>
                                 <ul>
                                     <li> Scroll down on this popup to get to the `close` button :) </li>
                                     <li> Try to have your screen size at least 800 x 600 </li>
@@ -1391,12 +1464,11 @@ class GameWindow extends React.Component {
                                     <li> Each room (except boss room) may contain up to 3 upgrades. Make sure you collect them all</li>
                                     <li> A monster's skin changes when it attacks and damages you </li>
                                     <li> A monster's skin changes when it has low health. It regenerates health as well </li>
-                                    <li> Monsters get tougher the more you get away from the starting room </li>
-                                    <li> The white circle indicates your reach. Sometimes, you may kite the monsters </li>
+                                    <li> Monsters get tougher the more you get away from the starting room. Don't wander off until you are strong enough </li>
+                                    <li> The white circle indicates your reach. Time to time, you may kite the monsters </li>
                                     <li> You can hold space button to maximize your DPS </li>
                                     <li> Picking up another weapon overrides your current one only if it is better.</li>
-                                    <li> Try to level up before trying to take down the boss </li>
-                                    <li> This is a rouge-like game, so you must be a dedicated warrior to beat the boss </li>
+                                    <li> Make sure to reach a high level before fighting the boss </li>
                                     <li> You will know its the boss when you see it </li>
                                 </ul>
                                 <dismiss onClick={this.start.bind(this)}> Close </dismiss>
@@ -1411,7 +1483,7 @@ class GameWindow extends React.Component {
                 {creatures}
                 {pickups}
                 <PlayerHUD/>
-                {message}
+                {endingMessage}
             </div>
         );
     }
