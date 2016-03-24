@@ -143,7 +143,8 @@ class GameManager {
         PM.player
             .move(key)
             .then(() => EM.dispatch('updateOverlayState'))
-            .then(() => this.focusToPlayer());
+            .then(() => this.focusToPlayer())
+            .catch(err => console.log(err));
     }
 
     playerAttack() {
@@ -166,6 +167,17 @@ class GameManager {
         if (PM.getLeft() > maxLeft) document.body.scrollLeft = PM.getLeft() + focusSpace * CellSize - document.body.clientWidth;
     }
 
+    registerWindow(gameWindow) {
+        this.gameWindow = gameWindow;
+    }
+
+    playerIsDead() {
+        this.gameWindow.playerIsDead();
+    }
+
+    bossIsDead() {
+        this.gameWindow.bossIsDead();
+    }
 }
 
 const GM = new GameManager();
@@ -173,7 +185,8 @@ const GM = new GameManager();
 
 const Textures = {
     GROUND: 'url(http://previewcf.turbosquid.com/Preview/2014/08/01__19_04_23/dirt4.jpgbf45ffb4-96f9-4ca6-bc54-2012269a6186Small.jpg)',
-    WALL: 'url(https://s-media-cache-ak0.pinimg.com/236x/47/9b/f3/479bf37a046c21e20a3e1d47eb935cdf.jpg)',
+    // WALL: 'url(https://s-media-cache-ak0.pinimg.com/236x/47/9b/f3/479bf37a046c21e20a3e1d47eb935cdf.jpg)',
+    WALL: 'url(http://pre04.deviantart.net/f153/th/pre/i/2014/037/2/0/tileable_brick_texture_by_bhaskar655-d75b94u.jpg)',
     ZOMBIE: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/256/Zombie-icon.png)',
     ZOMBIE_ATT: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Voodoo-Doll-icon.png)',
     ZOMBIE_DMG: 'url(http://icons.iconarchive.com/icons/hopstarter/halloween-avatars/128/Slimer-icon.png)',
@@ -192,6 +205,8 @@ const Textures = {
     ATTACKSPEED: 'url(http://www.heroesfire.com/images/wikibase/icon/talents/arsenal.png)',
     VISION: 'url(http://onerockinternational.com/wp-content/uploads/2012/09/Icon-DV.jpg)',
     RANGE: 'url(http://www.theaccessproject.org.uk/assets/range-icon-3a2c49a3dc4e22cd734fb4a86de505c3.png)',
+    STRENGTH: 'url(http://vignette1.wikia.nocookie.net/infinitecrisis/images/3/36/Swamp_Thing_Warrior_King_Ability.jpg/revision/latest?cb=20141204025132)',
+    REGENERATION: 'url(http://hydra-media.cursecdn.com/pathofexile.gamepedia.com/1/1c/Life_Regeneration_passive_icon.png?version=b49d0118eb4559089d7fe3e4f199915c)',
     KNIFE: 'url(http://game-icons.net/icons/lorc/originals/png/bowie-knife.png)',
     KATANA: 'url(http://icons.iconarchive.com/icons/yellowicon/tmnt/512/Katana-icon.png)',
     HALBERD: 'url(http://vignette2.wikia.nocookie.net/unisonleague/images/1/16/Gear-Halberd_Render.png/revision/latest/scale-to-width-down/350?cb=20160223064132)',
@@ -199,14 +214,58 @@ const Textures = {
     PLAYER_ATT: 'url(http://icons.iconarchive.com/icons/mattahan/ultrabuuf/128/Street-Fighter-Blanka-icon.png)'
 };
 
-const preload = Object.keys(Textures).map(key => {
+const preloadTextures = Object.keys(Textures).map(key => {
     const image = new Image();
     image.src = Textures[key].slice(4, -1);
 
     $(image).appendTo('body').hide();
-    //$('body').append(image).hide();
     return image;
-})
+});
+
+const SoundsToPreload = {
+    THEME: 'http://dor-lomin.com/archive/ultima/musicarchive/uo/mp3/death2-u8.mp3',
+    BOSS_GREET: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-greet.wav',
+    BOSS_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-hit.wav',
+    BOSS_DMG: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-dmg.wav',
+    BOSS_DIE: 'http://game-resources.hazarilhan.com/dungeon-crawler/boss-die.wav',
+    ZOMBIE_GREET: 'http://game-resources.hazarilhan.com/dungeon-crawler/zombie-greet.wav',
+    ZOMBIE_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/zombie-hit.wav',
+    ZOMBIE_DMG: 'http://game-resources.hazarilhan.com/dungeon-crawler/zombie-dmg.wav',
+    ZOMBIE_DIE: 'http://game-resources.hazarilhan.com/dungeon-crawler/zombie-die.wav',
+    SKELETON_GREET: 'http://game-resources.hazarilhan.com/dungeon-crawler/skeleton-greet.wav',
+    SKELETON_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/skeleton-hit.wav',
+    SKELETON_DMG: 'http://game-resources.hazarilhan.com/dungeon-crawler/skeleton-dmg.wav',
+    SKELETON_DIE: 'http://game-resources.hazarilhan.com/dungeon-crawler/skeleton-die.wav',
+    IMP_GREET: 'http://game-resources.hazarilhan.com/dungeon-crawler/imp-greet.wav',
+    IMP_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/imp-hit.wav',
+    IMP_DMG: 'http://game-resources.hazarilhan.com/dungeon-crawler/imp-dmg.wav',
+    IMP_DIE: 'http://game-resources.hazarilhan.com/dungeon-crawler/imp-die.wav',
+    PUNCH: 'http://game-resources.hazarilhan.com/dungeon-crawler/punch.wav',
+    KNIFE: 'http://game-resources.hazarilhan.com/dungeon-crawler/knife.wav',
+    KATANA: 'http://game-resources.hazarilhan.com/dungeon-crawler/katana.wav',
+    HALBERD: 'http://game-resources.hazarilhan.com/dungeon-crawler/halberd.wav',
+    SWING: 'http://game-resources.hazarilhan.com/dungeon-crawler/swing.wav',
+    WALK: 'http://game-resources.hazarilhan.com/dungeon-crawler/walk.wav',
+    WALK2: 'http://game-resources.hazarilhan.com/dungeon-crawler/walk2.wav',
+    PICKUP: 'http://game-resources.hazarilhan.com/dungeon-crawler/pickup.wav',
+    PLAYER_HEALTHY_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-healthy-hit.wav',
+    PLAYER_WOUNDED_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-wounded-hit.wav',
+    PLAYER_CRITICAL_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-critical-hit.wav',
+    PLAYER_DEADLY_HIT: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-deadly-hit.wav',
+    PLAYER_DIE: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-die.wav',
+    PLAYER_LEVEL: 'http://game-resources.hazarilhan.com/dungeon-crawler/player-level.wav'
+};
+
+const Sounds = {};
+Object.keys(SoundsToPreload).forEach(key => {
+    const audio = new Audio();
+    audio.src = SoundsToPreload[key];
+
+    $(audio).appendTo('body').hide();
+    Sounds[key] = audio;
+});
+
+Sounds.THEME.loop = true;
 
 class Cell extends React.Component {
     constructor(props) {
@@ -217,8 +276,8 @@ class Cell extends React.Component {
     }
 
     componentDidMount() {
-        const top = (this.top == undefined) ? this.props.i * this.size : this.top;
-        const left = (this.left == undefined) ? this.props.j * this.size : this.left;
+        const top = (this.top == undefined) ? this.props.i * CellSize : this.top;
+        const left = (this.left == undefined) ? this.props.j * CellSize : this.left;
 
         this.setState({
             top: top,
@@ -264,7 +323,8 @@ class Cell extends React.Component {
                           </cell-content>
         } else {
             let overlayState = '';
-            overlayState += this.state.fogged ? ' fogged' : '';
+
+            if (this.type != 'pickup' || !this.state.revealed) overlayState += this.state.fogged ? ' fogged' : '';
             overlayState += this.state.revealed ? ' revealed' : '';
 
             cellContent = <cell-overlay class={overlayState}>{this.state.displayText}</cell-overlay>
@@ -417,7 +477,6 @@ class Creature extends Cell {
                 return {direction, speed};
             })
             .then(moveInfo => this.afterMove(moveInfo))
-            .catch(err => {});//console.log(err));
     }
 
     attack(name) {
@@ -459,6 +518,9 @@ class Creature extends Cell {
     onAttack() {}
     onAttackEnd() {}
 
+    calcMinDmg() { return 0; }
+    calcMaxDmg() { return 1; }
+
     beforeMove(direction, speed) {
         if (speed <= 0) return Promise.reject('Occupied');
 
@@ -492,7 +554,7 @@ class Creature extends Cell {
     }
 
     afterMove() {
-        this.updateOverlayState();        
+        this.updateOverlayState();
     }
 
 
@@ -506,19 +568,23 @@ class Creature extends Cell {
     }
 
     damage(target) {
-        const min_dmg = this.power * (this.level - 1);
-        const max_dmg = this.power * (this.level + 0.5);
+        const min_dmg = this.calcMinDmg();
+        const max_dmg = this.calcMaxDmg();
 
-        const dmg = Math.random() * (max_dmg - min_dmg) + min_dmg;
+        let dmg = Math.random() * (max_dmg - min_dmg) + min_dmg;
+        if (dmg < 0) dmg = 0;
 
         target.health -= dmg;
         target.onDamaged();
+
+        this.hitSound.play();
     }
 
     onDamaged() {
         console.log(this.name + ' got damaged and has health ' + this.health)
         if (this.health > 0 && this.health <= this.maxHealth * 0.3) {
-            this.setState({texture: this.dmgTexture});
+            if (this.dmgTexture)
+                this.setState({texture: this.dmgTexture});
         }
         if (this.health <= 0) this.die();
     }
@@ -530,7 +596,8 @@ class Creature extends Cell {
     }
 
     onDie() {
-        console.log('ok got dead');
+        console.log('ok got dead', this);
+        this.dieSound.play();
         this.dead = true;
         this.setState({texture: Textures.DEAD});
     }
@@ -540,37 +607,54 @@ class Creature extends Cell {
 class NPC extends Creature {
     constructor(props) {
         super();
-        //this.name = 'zombie';
 
         this.top = props.top || 40;
         this.left = props.left || 40;
         this.xp = 1;
 
-        // this.texture = Textures.ZOMBIE;
+        this.regenerate();
+        this.hasGreeted = false;
 
-        // this.size = CellSize;
+    }
 
-        //this.moveRandom();
+    componentDidMount() {
+        super.componentDidMount();
+        this.maxHealth = this.baseHealth * this.level;
+        this.health = this.maxHealth;
     }
 
 
     moveRandom() {
         this.mover = setInterval(() => {
             let direction = ['Up', 'Down', 'Left', 'Right'].sort((a, b) => Math.random() > 0.5)[0];
+            let alt_direction = '';
             const others = GM.getOtherCreatures(this);
             const player = others.canSee.filter(creature => creature.name == 'player')[0];
+
+            if (player && !this.hasGreeted) {
+                const canSeeMe = GM.getOtherCreatures(player).canSee.filter(creature => creature == this);
+
+                if (canSeeMe) {
+                    this.greetSound.play();
+                    this.hasGreeted = true;
+                }
+            }
 
             if(player) {
                 const dT = this.top - player.top;
                 const dL = this.left - player.left;
 
-                if (Math.abs(dL) > Math.abs(dT)) {
-                    if (player.left >= this.left) direction = 'Right';
-                    if (player.left < this.left) direction = 'Left';
-                } else {
-                    if (player.top >= this.top) direction = 'Down';
-                    if (player.top < this.top) direction = 'Up';
-                }
+                if (player.left >= this.left) direction = 'Right';
+                if (player.left < this.left) direction = 'Left';
+                if (player.top >= this.top) alt_direction = 'Down';
+                if (player.top < this.top) alt_direction = 'Up';
+
+
+                if (Math.abs(dT) > Math.abs(dL)) {
+                   let tmp_direction = alt_direction;
+                   alt_direction = direction;
+                   direction = tmp_direction;
+                } 
 
                 const mayAttack = others.canAttack.filter(creature => creature.name == 'player')[0];
                 if (mayAttack) {
@@ -578,7 +662,17 @@ class NPC extends Creature {
                 }
             }
 
-            this.move(direction);
+            let maxMoveRange = PM.player.vision + 2;
+            if (maxMoveRange > 12) maxMoveRange = 12;
+
+            if ((Math.pow(PM.player.top - this.top, 2) + Math.pow(PM.player.left - this.left, 2)) < Math.pow(maxMoveRange * CellSize, 2))
+                this
+                    .move(direction)
+                    .catch(err => { 
+                        //console.log(`Monster cant move to ${direction}. Will try ${alt_direction}`);
+                        return this.move(alt_direction);
+                    })
+                    .catch(err => {/* console.log('Cant move there either, giving up...') */ });
         }, 250);
     }
 
@@ -587,11 +681,38 @@ class NPC extends Creature {
         this.damage(PM.player);
     }
 
+    regenerate() {
+        this.regenerationInterval = setInterval(() => {
+            const amount = (this.level / 4) / 11;
+            if (this.health < this.maxHealth) {
+                this.health += amount;
+                if (this.health > this.maxHealth)
+                    this.health = this.maxHealth;
+            }
+        },250);
+    }
+
+    onDamaged() {
+        super.onDamaged();
+        if (this.health > 0) this.dmgSound.play();
+    }
+
+    calcMinDmg() { return (this.level - 1) * 2; }
+    calcMaxDmg() { return this.power * (1 + 0.1 * this.level); }
+
     onDie() {
         super.onDie();
         clearInterval(this.mover);
+        clearInterval(this.regenerate);
         this.mover = undefined;
-        PM.player.gainXP(this.xp);
+        this.regenerate = undefined;
+
+        let moddedXp = 0;
+        if (PM.player.level < this.level) moddedXp = this.xp * 1.5;
+        if (PM.player.level == this.level) moddedXp = this.xp;
+        if (PM.player.level > this.level) moddedXp = this.xp * this.level / PM.player.level;
+
+        PM.player.gainXP(moddedXp);
     }
 }
 
@@ -602,15 +723,19 @@ class Zombie extends NPC {
         this.texture = Textures.ZOMBIE;
         this.dmgTexture = Textures.ZOMBIE_DMG;
         this.attTexture = Textures.ZOMBIE_ATT;
+        this.greetSound = Sounds.ZOMBIE_GREET;
+        this.hitSound = Sounds.ZOMBIE_HIT;
+        this.dmgSound = Sounds.ZOMBIE_DMG;
+        this.dieSound = Sounds.ZOMBIE_DIE;
         this.size = CellSize;
-        this.xp = 5;
+        this.xp = 6;
         this.vision = 2;
         this.range = 1;
         this.power = 2;
         this.speed = 6;
-        this.attackSpeedHz = 1;
-        this.health = 10;
-        this.maxHealth = 10;
+        this.attackSpeedHz = 0.6;
+        this.baseHealth = 10;
+        this.level = Math.random() > 0.5 ? 1 : 2;
     }
 }
 
@@ -621,15 +746,19 @@ class Skeleton extends NPC {
         this.texture = Textures.SKELETON;
         this.dmgTexture = Textures.SKELETON_DMG;
         this.attTexture = Textures.SKELETON_ATT;
+        this.greetSound = Sounds.SKELETON_GREET;
+        this.hitSound = Sounds.SKELETON_HIT;
+        this.dmgSound = Sounds.SKELETON_DMG;
+        this.dieSound = Sounds.SKELETON_DIE;
         this.size = CellSize * 1.35;
-        this.xp = 7;
+        this.xp =11;
         this.vision = 3;
         this.range = 1.25;
-        this.power = 5;
+        this.power = 8;
         this.speed = 10;
-        this.attackSpeedHz = 1.25;
-        this.health = 20;
-        this.maxHealth = 20;
+        this.attackSpeedHz = 1;
+        this.level = Math.random() > 0.5 ? 2 : 3;
+        this.baseHealth = 20;
     }
 }
 
@@ -640,15 +769,19 @@ class Imp extends NPC {
         this.texture = Textures.IMP;
         this.dmgTexture = Textures.IMP_DMG;
         this.attTexture = Textures.IMP_ATT;
+        this.greetSound = Sounds.IMP_GREET;
+        this.hitSound = Sounds.IMP_HIT;
+        this.dmgSound = Sounds.IMP_DMG;
+        this.dieSound = Sounds.IMP_DIE;
         this.size = CellSize * 1.8;
-        this.xp = 15;
+        this.xp = 23;
         this.vision = 7;
-        this.range = 1.5;
-        this.power = 5;
+        this.range = 2;
+        this.power = 8;
         this.speed = 28;
         this.attackSpeedHz = 1.5;
-        this.health = 40;
-        this.maxHealth = 40;
+        this.baseHealth = 30;
+        this.level = Math.random() > 0.5 ? 4 : 5;
     }
 }
 
@@ -659,15 +792,24 @@ class Boss extends NPC {
         this.texture = Textures.BOSS;
         this.dmgTexture = Textures.BOSS_DMG;
         this.attTexture = Textures.BOSS_ATT;
+        this.greetSound = Sounds.BOSS_GREET;
+        this.hitSound = Sounds.BOSS_HIT;
+        this.dmgSound = Sounds.BOSS_DMG;
+        this.dieSound = Sounds.BOSS_DIE;
         this.size = CellSize * 4;
         this.xp = 100;
         this.vision = 10;
-        this.range = 3;
+        this.range = 6;
         this.power = 25;
         this.speed = 4;
         this.attackSpeedHz = 1;
-        this.health = 500;
-        this.maxHealth = 150;
+        this.baseHealth = 150;
+        this.level = 10;    
+    }
+
+    onDie() {
+        super.onDie();
+        GM.bossIsDead();
     }
 }
 
@@ -680,7 +822,7 @@ class Player extends Creature {
 
         this.top = Math.floor(startingRoom.cY) * CellSize;
         this.left = Math.floor(startingRoom.cX) * CellSize;
-        this.vision = 3.5;
+        this.vision = 2.5;
 
         this.xp = 0;
 
@@ -689,7 +831,7 @@ class Player extends Creature {
         this.range = 1;
         this.state.range = this.range;
 
-        this.power = 3;
+        this.power = 1.25;
 
         this.weapon = 'Punch';
 
@@ -703,9 +845,23 @@ class Player extends Creature {
         this.texture = Textures.PLAYER;
         this.attTexture = Textures.PLAYER_ATT;
 
+        this.swingSound = Sounds.SWING;
+        this.walkSound = Sounds.WALK;
+        this.walkSound2 = Sounds.WALK2;
+        this.hitSound = Sounds.PUNCH;
+        this.dieSound = Sounds.PLAYER_DIE;
+        this.levelSound = Sounds.PLAYER_LEVEL;
+
+        this.regenerationRate = 1;
+        this.strength = 0;
+
         PM.register(this);
 
         this.regenerate();
+        this.canPlayWalk = true;
+
+        $(this.walkSound).on('ended', _ => this.canPlayWalk = true);
+        $(this.walkSound2).on('ended', _ => this.canPlayWalk = true);
     }
 
     componentDidMount() {
@@ -713,8 +869,8 @@ class Player extends Creature {
         EM.hud.update(this);
     }
 
-    afterMove(){
-        super.afterMove(); 
+    afterMove({direction, speed}){
+        super.afterMove({direction, speed}); 
         const pickedup = GM.getPickups().filter(pickup => {
             return !(this.top >= pickup.state.top + pickup.size ||
                 this.top + this.size <= pickup.state.top ||
@@ -726,12 +882,19 @@ class Player extends Creature {
             pickedup.affect(this);
             EM.hud.update(this);
         }
+
+        if (this.canPlayWalk) {
+            this.canPlayWalk = false;
+            Math.random() > 0.35 ? this.walkSound.play() : this.walkSound2.play();
+        }
     }
 
     onAttack() {
         console.log("begin", GM.getOtherCreatures(this).canAttack);
         const target = GM.getOtherCreatures(this).canAttack[0];
-        target && this.damage(target);
+
+        if (target) this.damage(target);
+        else this.swingSound.play();
     }
 
     onAttackEnd() {
@@ -741,14 +904,37 @@ class Player extends Creature {
     onDamaged() {
         super.onDamaged();
         EM.hud.update(this);
+
+        if (this.health > 0) this.playDamagedSound();
     }
+
+    playDamagedSound() {
+        if (this.health > this.maxHealth * 0.75) Sounds.PLAYER_HEALTHY_HIT.play();
+        else if (this.health > this.maxHealth * 0.5) Sounds.PLAYER_WOUNDED_HIT.play();
+        else if (this.health > this.maxHealth * 0.25) Sounds.PLAYER_CRITICAL_HIT.play();
+        else Sounds.PLAYER_DEADLY_HIT.play();
+    }
+
+    calcMinDmg() { return (this.power + this.strength) * (this.level - 1 / this.level); }
+    calcMaxDmg() { return (this.power + this.strength) * (this.level + (this.level - 1) / 10); }
 
     gainXP(xp) {
         this.xp += xp;
-        if (this.xp >= 10 * (this.level * (this.level + 1) / 2)) {
+        while (this.xp >= 10 * (this.level * (this.level + 1) / 2)) {
             this.level++;
             this.maxHealth = this.level * 10;
-            this.health = this.maxHealth;
+            if (this.health < this.maxHealth - 10) this.health += 10;
+            else if (this.health < this.maxHealth) this.health = this.maxHealth;
+
+            this.range += 0.1;
+            this.setState({range: this.range});
+
+            this.attackSpeedHz += 0.05;
+            this.vision += 0.5;
+            this.speed += 1;
+
+            this.regenerationRate += 0.025;
+            this.levelSound.play();
         }
 
         EM.hud.update(this);
@@ -756,7 +942,7 @@ class Player extends Creature {
 
     regenerate() {
         this.regenerationInterval = setInterval(() => {
-            const amount = (this.level / 4) / 16;
+            const amount = (this.level * this.regenerationRate / 4) / 8;
             if (this.health < this.maxHealth) {
                 this.health += amount;
                 if (this.health > this.maxHealth)
@@ -771,6 +957,7 @@ class Player extends Creature {
         super.onDie();
         clearInterval(this.regenerationInterval);
         this.regenerationInterval = undefined;
+        GM.playerIsDead();
     }
 }
 
@@ -778,7 +965,7 @@ class PlayerHUD extends React.Component {
     constructor() {
         super();
         EM.hud = this;
-        this.state = {player: {health: 0, maxHealth: 0,damage: null, level: null, power: null, weapon: null, vision: null, speed: null, range: 0, attackSpeedHz: 0, xp: 0}};
+        this.state = {player: {health: 0, maxHealth: 0,damage: 0, level: 0, power: 0, weapon: '', vision: 0, speed: 0, range: 0, attackSpeedHz: 0, xp: 0, regenerationRate: 0}};
     }
 
     update(player) {
@@ -786,17 +973,24 @@ class PlayerHUD extends React.Component {
     }
 
     render() {
+        const min_dmg = (this.state.player.power + this.state.player.strength) * (this.state.player.level - 1 / this.state.player.level);
+        const max_dmg = (this.state.player.power + this.state.player.strength) * (this.state.player.level + (this.state.player.level - 1) / 10);
+
+        console.log('whats the problem', this.state.player, this.state.player.regenerationRate);
+
         return (
             <hud>
                 <huditem>Level: {this.state.player.level}</huditem>
                 <huditem>Health: {this.state.player.health.toFixed(1)} / {this.state.player.maxHealth}</huditem>
-                <huditem>Att. Power: {this.state.player.power}</huditem>
                 <huditem>Weapon: {this.state.player.weapon}</huditem>
-                <huditem>Vision: {this.state.player.vision}</huditem>
-                <huditem>Walk Speed: {this.state.player.speed}</huditem>
-                <huditem>Att. Range: {this.state.player.range.toFixed(2)}</huditem>
+                <huditem>Damage: {min_dmg.toFixed(1)} ~ {max_dmg.toFixed(1)}</huditem>
                 <huditem>Att. Per Sec.: {this.state.player.attackSpeedHz.toFixed(2)}</huditem>
-                <huditem>XP: {this.state.player.xp} / {this.state.player.level * (this.state.player.level + 1) * 10 / 2}</huditem>
+                <huditem>Dmg. Per Sec.: {(this.state.player.attackSpeedHz * (min_dmg + max_dmg) / 2).toFixed(2)}</huditem>
+                <huditem>Att. Range: {this.state.player.range.toFixed(2)}</huditem>
+                <huditem>Vision: {this.state.player.vision.toFixed(1)}</huditem>
+                <huditem>Walk Speed: {this.state.player.speed}</huditem>
+                <huditem>Regeneration Rate: {this.state.player.regenerationRate.toFixed(2)}</huditem>
+                <huditem>XP: {this.state.player.xp.toFixed(1)} / {this.state.player.level * (this.state.player.level + 1) * 10 / 2}</huditem>
             </hud>
         );
     }
@@ -809,6 +1003,13 @@ class PickUp extends Cell {
         this.type = 'pickup';
         this.pickupType = 'default';
         this.state.used = false;
+        this.pickupSound = Sounds.PICKUP;
+        this.size = CellSize / 2;
+    }
+
+    affect(player) {
+        this.pickupSound.play();
+        this.setState({used: true});
     }
 
     render() {
@@ -826,8 +1027,8 @@ class Health extends PickUp {
     }
 
     affect(player) {
-        player.health += 10;        
-        this.setState({used: true});
+        super.affect(player);
+        player.health += 15;        
     }
 }
 
@@ -839,8 +1040,8 @@ class Speed extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
         player.speed += Math.floor(Math.random() * 7) + 1;      
-        this.setState({used: true});
     }
 }
 
@@ -852,9 +1053,9 @@ class AttackSpeed extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
         player.attackSpeedHz += Math.random();
         if (player.attackSpeedHz <= 0) player.attackSpeedHz = 5;        
-        this.setState({used: true});
     }
 }
 
@@ -866,8 +1067,8 @@ class Vision extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
         player.vision += Math.floor(Math.random() * 3) + 1;         
-        this.setState({used: true});
     }
 }
 
@@ -879,9 +1080,38 @@ class Range extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
         player.range += Math.random();      
-        this.setState({used: true});
         player.setState({range: player.range});
+
+        if (player.range > player.vision)
+            player.vision = player.range;
+    }
+}
+
+class Strength extends PickUp {
+    constructor(...args) { 
+        super(...args);
+        this.texture = Textures.STRENGTH;
+        this.pickupType = 'strength';
+    }
+
+    affect(player) {
+        super.affect(player);
+        player.strength += Math.floor(Math.random() * 6) + 1;     
+    }
+}
+
+class Regeneration extends PickUp {
+    constructor(...args) { 
+        super(...args);
+        this.texture = Textures.REGENERATION;
+        this.pickupType = 'regeneration';
+    }
+
+    affect(player) {
+        super.affect(player);
+        player.regenerationRate += Math.random() / 2;     
     }
 }
 
@@ -889,6 +1119,10 @@ class Weapon extends PickUp {
     constructor(...args) { 
         super(...args);
         this.pickupType = 'power';
+    }
+
+    affect(player) {
+        super.affect(player);
     }
 }
 
@@ -899,9 +1133,12 @@ class Knife extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
+        if (player.power > 3) return;
+
         player.weapon = 'Knife';
-        player.power = 7; 
-        this.setState({used: true});
+        player.power = 3; 
+        player.hitSound = Sounds.KNIFE;
     }    
 }
 
@@ -912,9 +1149,12 @@ class Katana extends PickUp {
     } 
 
     affect(player) {
+        super.affect(player);
+        if (player.power > 7) return;
+
         player.weapon = 'Katana';
-        player.power = 15; 
-        this.setState({used: true});
+        player.power = 7;
+        player.hitSound = Sounds.KATANA;
     } 
 }
 
@@ -925,9 +1165,12 @@ class Halberd extends PickUp {
     }
 
     affect(player) {
+        super.affect(player);
+        if (player.power > 9) return;
+
         player.weapon = 'Halberd';
-        player.power = 20; 
-        this.setState({used: true});
+        player.power = 9;  
+        player.hitSound = Sounds.HALBERD;
     }  
 }
 
@@ -936,6 +1179,8 @@ class GameWindow extends React.Component {
     constructor() {
         super();
         this.state = {};
+        this.state.gameStarted = false;
+        this.state.endMessage = '';
         this.state.gameEnd = false;
         this.state.pickups = [];
         this.state.player = <Player/>;
@@ -944,11 +1189,14 @@ class GameWindow extends React.Component {
 
             let pickup = '';
             let pickup2 = '';
+            let pickup3 = '';
 
-            if (Math.random() > 0.1) {
+            if (Math.random() > 0.05) {
                 pickup = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
                 if (Math.random() > 0.5) {
                     pickup2 = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
+                    if (Math.random() > 0.15)
+                        pickup3 = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
                 }
             }
 
@@ -956,15 +1204,31 @@ class GameWindow extends React.Component {
                 <div key={'p' + id}>
                     {pickup}
                     {pickup2}
+                    {pickup3}
                 </div>
             );
         });
 
         this.state.creatures = rooms.map((room, id) => {
-            const creature = this.generateRandomEnemyInRoom(room, id / (rooms.length - 1));
-
-            return (creature);
+            const creatures = this.generateRandomEnemiesInRoom(room, id / (rooms.length - 1));
+            return (
+                <div key={'room' + id}>
+                    {creatures}
+                </div>
+            );
         });
+
+        GM.registerWindow(this);
+    }
+
+    playerIsDead() {
+        this.setState({gameEnd: true, endMessage: 'You are dead'});
+        console.log('hello player');
+    }
+
+    bossIsDead() {
+        this.setState({gameEnd: true, endMessage: 'You killed the boss!'});
+        console.log('hello boss');
     }
 
     generateRandomPointInRoom(room) {
@@ -974,34 +1238,63 @@ class GameWindow extends React.Component {
         };
     };
 
-    generateRandomEnemyInRoom(room, hardness) {
-        const pos = this.generateRandomPointInRoom(room);
+    generateRandomEnemyInPosition(pos, hardness) {
         const randomID = this.generateRandomId();
         
         if (hardness == 0){
             return '';
-        } else if (hardness < 0.25) {
-            return <Zombie key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
-        } else if (hardness < 0.38) {
+        } else if (hardness < 0.3) {
+            return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
+        } else if (hardness < 0.5) {
             if (Math.random() < 0.5)
-                return <Zombie key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+                return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
             else
-                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
         } else if (hardness < 0.6) {
-            return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+            return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
         } else if (hardness < 0.8) {
             if (Math.random() < 0.5)
-                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
             else
-                return <Imp key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+                return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2}/>
         } else if (hardness < 1) {
-            return <Imp key={'npc' + randomID} top={pos.y * CellSize} left={pos.x * CellSize}/>
+            return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2}/>
         } else
-            return <Boss key={'npc' + randomID} top={room.cY * CellSize} left={room.cX * CellSize}/>
+            return <Boss key={'npc' + randomID} top={pos.y * CellSize - CellSize * 4 / 2} left={pos.x * CellSize - CellSize * 4 / 2}/>
+    }
+
+    generateRandomEnemiesInRoom(room, hardness) {
+        if (hardness == 0) return '';
+        if (hardness == 1) return [this.generateRandomEnemyInPosition({x: room.cX, y: room.cY}, 1)]
+
+        const maxCount = Math.ceil(10 * (1 - hardness));
+        const actualCount = hardness < 1 ? Math.ceil(Math.random() * maxCount) : 1;
+        let positions = [];
+
+        for (var i = 0; i < actualCount; i++) {
+            let retry = 1000;
+            let available = false;
+            let pos;
+            while (!available && retry > 0) {
+                pos = this.generateRandomPointInRoom(room);
+                available = positions.reduce((pre, cur) => {
+                    return pre && (pos.y >= cur.y + 2 ||
+                                   pos.y + 2 <= cur.y ||
+                                   pos.x >= cur.x + 2 ||
+                                   pos.x + 2 <= cur.x);
+                }, true);
+
+                retry--;
+            }
+
+            if (available) positions.push(pos);
+        }
+
+        return positions.map(pos => this.generateRandomEnemyInPosition(pos, hardness));
     }
 
     generateRandomPickupInPosition(pos) {        
-        const val = Math.floor(Math.random() * 6);
+        const val = Math.floor(Math.random() * 8);
         const randomID = this.generateRandomId();
 
         switch (val) {
@@ -1010,7 +1303,9 @@ class GameWindow extends React.Component {
             case 2: return <AttackSpeed key={randomID} i={pos.y} j={pos.x}/>
             case 3: return <Vision key={randomID} i={pos.y} j={pos.x}/>
             case 4: return <Range key={randomID} i={pos.y} j={pos.x}/>
-            case 5: 
+            case 5: return <Strength key={randomID} i={pos.y} j={pos.x}/>
+            case 6: return <Regeneration key={randomID} i={pos.y} j={pos.x}/>
+            case 7: 
                 const wep = Math.floor(Math.random() * 3);
                 switch (wep) {
                     case 0: return <Knife key={randomID} i={pos.y} j={pos.x}/>
@@ -1053,25 +1348,70 @@ class GameWindow extends React.Component {
         });
     }
 
+    start() {
+        this.setState({gameStarted: true});
+        GM.focusToPlayer();
+        Sounds.THEME.play();     
+    }
+
+    restart() {
+        window.location.reload();
+    }
 
     render() {
         const player = this.state.player;
         const creatures = this.state.creatures;
         const pickups = this.state.pickups;
 
-        let msg = '';
+        let message = '';
 
         if (this.state.gameEnd) {
-            msg = 'THE END';
+            message = <ender><msg>{this.state.endMessage}</msg><rld onClick={this.restart}>Try Again</rld></ender>;
+        }
+
+        let startingMessage = '';
+
+        if (!this.state.gameStarted) {
+            startingMessage = 
+                            <starter>
+                                <heading>Welcome to Batilc's Dungeon</heading>
+                                <heading2>Instructions</heading2>
+                                <ul>
+                                    <li> Arrows to move </li>
+                                    <li> Space to attack </li>
+                                    <li> Scroll around to see the map you discovered so far </li>
+                                    <li> Kill the boss somewhere in the dungeon </li>
+                                </ul>
+                                <heading2>Tips</heading2>
+                                <ul>
+                                    <li> Scroll down on this popup to get to the `close` button :) </li>
+                                    <li> Try to have your screen size at least 800 x 600 </li>
+                                    <li> Everything is generated at random </li>
+                                    <li> Each room (except start) contains 1 or more monsters </li>
+                                    <li> Each room (except boss room) may contain up to 3 upgrades. Make sure you collect them all</li>
+                                    <li> A monster's skin changes when it attacks and damages you </li>
+                                    <li> A monster's skin changes when it has low health. It regenerates health as well </li>
+                                    <li> Monsters get tougher the more you get away from the starting room </li>
+                                    <li> The white circle indicates your reach. Sometimes, you may kite the monsters </li>
+                                    <li> You can hold space button to maximize your DPS </li>
+                                    <li> Picking up another weapon overrides your current one only if it is better.</li>
+                                    <li> Try to level up before trying to take down the boss </li>
+                                    <li> This is a rouge-like game, so you must be a dedicated warrior to beat the boss </li>
+                                    <li> You will know its the boss when you see it </li>
+                                </ul>
+                                <dismiss onClick={this.start.bind(this)}> Close </dismiss>
+                            </starter>
         }
 
         return (
             <div>
+                {startingMessage}
                 <Map/>
                 {player}
                 {creatures}
                 {pickups}
                 <PlayerHUD/>
+                {message}
             </div>
         );
     }

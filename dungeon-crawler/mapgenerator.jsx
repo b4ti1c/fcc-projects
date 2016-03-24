@@ -174,7 +174,6 @@ let halls = [];
 
 leafs.forEach(leaf => {
     leaf.room && rooms.push(leaf.room)
-
     leaf.halls && leaf.halls.forEach(hall => halls.push(hall));
 });
 
@@ -185,7 +184,11 @@ rooms = rooms.map(room => {
     return room;
 });
 
-const startRoom = rooms[Math.floor(Math.random() * rooms.length)];
+const startRoom = rooms.reduce((pre, cur) => {
+    const area = cur.width * cur.height;
+    if (area < pre) return cur;
+    return pre;
+}, 9999999);
 
 rooms.sort((A, B) => {
     const posA = Math.pow(A.cX - startRoom.cX, 2) + Math.pow(A.cY - startRoom.cY, 2);
