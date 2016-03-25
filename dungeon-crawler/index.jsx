@@ -457,6 +457,8 @@ class Creature extends Cell {
         this.state.showHealth = false;
         this.state.health = this.health;
 
+        this.regenerationRate = 1;
+
         this.healthColor = 'rgba(154,4,36,1)';
     }
 
@@ -707,7 +709,7 @@ class NPC extends Creature {
                         return this.move(alt_direction);
                     })
                     .catch(err => {/* console.log('Cant move there either, giving up...') */ });
-        }, 250);
+        }, 250 + Math.random() * 10);
     }
 
     onAttack() {
@@ -717,7 +719,7 @@ class NPC extends Creature {
 
     regenerate() {
         this.regenerationInterval = setInterval(() => {
-            const amount = (this.level / 4) / 16;
+            const amount = (this.level * this.regenerationRate / 4) / 16;
             if (this.health < this.maxHealth) {
                 this.health += amount;
                 if (this.health > this.maxHealth)
@@ -766,14 +768,14 @@ class Zombie extends NPC {
         this.dmgSound = Sounds.ZOMBIE_DMG;
         this.dieSound = Sounds.ZOMBIE_DIE;
         this.size = CellSize;
-        this.xp = 9;
+        this.xp = 7;
         this.vision = 2.5;
         this.range = 1;
         this.power = 2;
         this.speed = 6;
         this.attackSpeedHz = 0.5;
         this.baseHealth = 8;
-        this.level = Math.random() > 0.25 ? 1 : 2;
+        this.level = props.level || (Math.random() > 0.25 ? 1 : 2);
     }
 }
 
@@ -789,13 +791,13 @@ class Skeleton extends NPC {
         this.dmgSound = Sounds.SKELETON_DMG;
         this.dieSound = Sounds.SKELETON_DIE;
         this.size = CellSize * 1.35;
-        this.xp =21;
+        this.xp = 18;
         this.vision = 5;
         this.range = 1.35;
         this.power = 6;
         this.speed = 10;
         this.attackSpeedHz = 1;
-        this.level = Math.random() > 0.5 ? 2 : 3;
+        this.level = props.level || (Math.random() > 0.5 ? 2 : 3);
         this.baseHealth = 20;
     }
 }
@@ -812,14 +814,14 @@ class Imp extends NPC {
         this.dmgSound = Sounds.IMP_DMG;
         this.dieSound = Sounds.IMP_DIE;
         this.size = CellSize * 1.8;
-        this.xp = 37;
+        this.xp = 31;
         this.vision = 7;
         this.range = 2;
         this.power = 6.5;
         this.speed = 28;
         this.attackSpeedHz = 1.5;
         this.baseHealth = 27;
-        this.level = Math.random() > 0.05 ? 4 : 5;
+        this.level = props.level || (Math.random() > 0.05 ? 4 : 5);
     }
 }
 
@@ -842,7 +844,8 @@ class Boss extends NPC {
         this.speed = 5;
         this.attackSpeedHz = 1;
         this.baseHealth = 80;
-        this.level = 7;    
+        this.level = props.level || 7;   
+        this.regenerationRate = 2; 
     }
 
     onDie() {
@@ -1312,27 +1315,29 @@ class GameWindow extends React.Component {
 
     generateRandomEnemyInPosition(pos, hardness) {
         const randomID = this.generateRandomId();
+        const hardIncrLevel = Math.random() > 0.9 ? 1 : 0;
+        const defIncrLevel = Math.random() > 0.5 ? 1 : 0;
         
         if (hardness == 0){
             return '';
         } else if (hardness < 0.2) {
-            return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
+            return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2} level={1}/>
         } else if (hardness < 0.4) {
             if (Math.random() < 0.75)
-                return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2}/>
+                return <Zombie key={'npc' + randomID} top={pos.y * CellSize - CellSize / 2} left={pos.x * CellSize - CellSize / 2} level={2 + hardIncrLevel}/>
             else
-                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2} level={2}/>
         } else if (hardness < 0.6) {
-            return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
+            return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2} level={2 + defIncrLevel + hardIncrLevel}/>
         } else if (hardness < 0.8) {
             if (Math.random() < 0.75)
-                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2}/>
+                return <Skeleton key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.35 / 2} left={pos.x * CellSize - CellSize * 1.35 / 2} level={3 + defIncrLevel}/>
             else
-                return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2}/>
+                return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2} level={3 + hardIncrLevel}/>
         } else if (hardness < 1) {
-            return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2}/>
+            return <Imp key={'npc' + randomID} top={pos.y * CellSize - CellSize * 1.8 / 2} left={pos.x * CellSize - CellSize * 1.8 / 2} level={4 + defIncrLevel}/>
         } else
-            return <Boss key={'npc' + randomID} top={pos.y * CellSize - CellSize * 4 / 2} left={pos.x * CellSize - CellSize * 4 / 2}/>
+            return <Boss key={'npc' + randomID} top={pos.y * CellSize - CellSize * 4 / 2} left={pos.x * CellSize - CellSize * 4 / 2} level={7}/>
     }
 
     generateRandomEnemiesInRoom(room, hardness) {
