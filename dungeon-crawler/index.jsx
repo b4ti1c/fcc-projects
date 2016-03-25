@@ -847,7 +847,7 @@ class Imp extends NPC {
         this.vision = 7;
         this.range = 2;
         this.power = 6.5;
-        this.speed = 5;
+        this.speed = 6.5;
         this.attackSpeedHz = 1.5;
         this.baseHealth = 27;
         this.level = props.level || (Math.random() > 0.05 ? 4 : 5);
@@ -870,11 +870,11 @@ class Boss extends NPC {
         this.vision = 10;
         this.range = 5;
         this.power = 15;
-        this.speed = 4.5;
+        this.speed = 5;
         this.attackSpeedHz = 1;
         this.baseHealth = 80;
         this.level = props.level || 7;   
-        this.regenerationRate = 4; 
+        this.regenerationRate = 6; 
     }
 
     onDie() {
