@@ -555,14 +555,8 @@ class Creature extends Cell {
             creatures.canSee.forEach(creature => !creature.mover && creature.moveRandom && creature.moveRandom());
         }
 
-        if (available)
-            return Promise.resolve(speed);
-        else {
-            if (this.name == 'player')
-                return this.beforeMove(direction, speed - 1);
-            else
-                return Promise.reject('Occupied');
-        }
+        if (available) return Promise.resolve(speed);
+        else return this.beforeMove(direction, speed - 1);
     }
 
     afterMove() {
@@ -640,6 +634,30 @@ class Creature extends Cell {
     }
 }
 
+
+class NPCMoveManager {
+    constructor() {
+        this.requests = [];
+        setInterval(_ => this.moveNpcs(), 40);
+    }
+
+    add(request) {
+        if (request.execute && request.distance) this.requests.push(request);
+        else console.log('Invalid request');
+    }
+
+    moveNpcs() {
+        this.requests
+            .sort((r1, r2) => r1.distance - r2.distance)
+            .slice(0, 2)
+            .forEach(request => request.execute());
+        this.requests = [];
+    }
+}
+
+const NPCMM = new NPCMoveManager();
+
+
 class NPC extends Creature {
     constructor(props) {
         super();
@@ -682,14 +700,13 @@ class NPC extends Creature {
             }
 
             if(player) {
-                const dT = this.top - player.top;
-                const dL = this.left - player.left;
+                const dT = (this.top + (this.size / 2)) - (player.top + (player.size / 2));
+                const dL = (this.left + (this.size / 2)) - (player.left + (player.size / 2));
 
-                if (player.left >= this.left) direction = 'Right';
-                if (player.left < this.left) direction = 'Left';
-                if (player.top >= this.top) alt_direction = 'Down';
-                if (player.top < this.top) alt_direction = 'Up';
-
+                if (player.left + (player.size / 2) >= this.left + (this.size / 2)) direction = 'Right';
+                if (player.left + (player.size / 2) < this.left + (this.size / 2)) direction = 'Left';
+                if (player.top + (player.size / 2) >= this.top + (this.size / 2)) alt_direction = 'Down';
+                if (player.top + (player.size / 2) < this.top + (this.size / 2)) alt_direction = 'Up';
 
                 if (Math.abs(dT) > Math.abs(dL)) {
                    let tmp_direction = alt_direction;
@@ -703,15 +720,25 @@ class NPC extends Creature {
                 }
             }
 
+            const dX = Math.pow((this.top + this.size / 2) - (PM.player.top + PM.player.size / 2), 2);
+            const dY = Math.pow((this.left + this.size / 2) - (PM.player.left + PM.player.size / 2), 2);
+
+            const moveRequest = {
+                distance: dX + dY,
+                execute: () => {
+                    this
+                        .move(direction)
+                        .catch(err => { 
+                            //console.log(`Monster cant move to ${direction}. Will try ${alt_direction}`);
+                            return this.move(alt_direction);
+                        })
+                        .catch(err => {/* console.log('Cant move there either, giving up...') */ });
+                }
+            };
             
-            this
-                .move(direction)
-                .catch(err => { 
-                    //console.log(`Monster cant move to ${direction}. Will try ${alt_direction}`);
-                    return this.move(alt_direction);
-                })
-                .catch(err => {/* console.log('Cant move there either, giving up...') */ });
-        }, 250 + Math.random() * 10);
+            NPCMM.add(moveRequest);
+           
+        }, 25);
     }
 
     onAttack() {
@@ -774,7 +801,7 @@ class Zombie extends NPC {
         this.vision = 2.5;
         this.range = 1;
         this.power = 2;
-        this.speed = 6;
+        this.speed = 1.5;
         this.attackSpeedHz = 0.5;
         this.baseHealth = 8;
         this.level = props.level || (Math.random() > 0.25 ? 1 : 2);
@@ -797,7 +824,7 @@ class Skeleton extends NPC {
         this.vision = 5;
         this.range = 1.35;
         this.power = 6;
-        this.speed = 10;
+        this.speed = 3.75;
         this.attackSpeedHz = 1;
         this.level = props.level || (Math.random() > 0.5 ? 2 : 3);
         this.baseHealth = 20;
@@ -820,7 +847,7 @@ class Imp extends NPC {
         this.vision = 7;
         this.range = 2;
         this.power = 6.5;
-        this.speed = 28;
+        this.speed = 5;
         this.attackSpeedHz = 1.5;
         this.baseHealth = 27;
         this.level = props.level || (Math.random() > 0.05 ? 4 : 5);
@@ -841,13 +868,13 @@ class Boss extends NPC {
         this.size = CellSize * 4;
         this.xp = 150;
         this.vision = 10;
-        this.range = 4;
+        this.range = 5;
         this.power = 15;
-        this.speed = 5;
+        this.speed = 4.5;
         this.attackSpeedHz = 1;
         this.baseHealth = 80;
         this.level = props.level || 7;   
-        this.regenerationRate = 2; 
+        this.regenerationRate = 4; 
     }
 
     onDie() {
@@ -967,24 +994,45 @@ class Player extends Creature {
     gainXP(xp) {
         this.xp += xp;
         while (this.xp >= 10 * (this.level * (this.level + 1) / 2)) {
-            this.level++;
-            this.maxHealth = this.level * 10;
-            if (this.health < this.maxHealth - 10) this.health += 10;
-            else if (this.health < this.maxHealth) this.health = this.maxHealth;
-
-            this.range += 0.1;
-            this.setState({range: this.range});
-
-            this.attackSpeedHz += 0.05;
-            this.vision += 0.5;
-            this.speed += 1;
-            this.strength += 2;
-
-            this.regenerationRate += 0.125;
-            this.levelSound.play();
+            this.levelUp();
         }
 
         EM.hud.update(this);
+    }
+
+    levelUp() {
+        this.level++;
+        this.maxHealth = this.level * 10;
+        if (this.health < this.maxHealth - 10) this.health += 10;
+        else if (this.health < this.maxHealth) this.health = this.maxHealth;
+
+        this.range += 0.1;
+        this.setState({range: this.range});
+
+        this.attackSpeedHz += 0.05;
+        this.vision += 0.5;
+        this.speed += 1;
+        this.strength += 2;
+
+        this.regenerationRate += 0.125;
+        this.levelSound.play();
+    }
+
+    cheat() {
+        this.vision = 200;
+        this.speed = 15;
+        this.strength = 40;
+        this.range = 7.5;
+        this.setState({range: this.range});
+        this.regenerationRate += 5;
+        this.power = 10;
+        this.attackSpeedHz = 4;
+        this.health = 1000;
+
+        EM.hud.update(this); 
+        this.levelSound.play();   
+        this.updateOverlayState();
+        EM.dispatch('updateOverlayState')
     }
 
     regenerate() {
@@ -1130,7 +1178,7 @@ class Vision extends PickUp {
     }
 
     affect(player) {
-        const amount = Math.random();
+        const amount = Math.random() / 2;
         player.vision += amount;
         this.pickupText = `+${amount.toFixed(2)} Vision`;              
         super.affect(player);
@@ -1268,7 +1316,7 @@ class GameWindow extends React.Component {
             let pickup2 = '';
             let pickup3 = '';
 
-            if (Math.random() > 0.05) {
+            if (id == 0 || Math.random() > 0.05) {
                 pickup = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
                 if (Math.random() > 0.5) {
                     pickup2 = this.generateRandomPickupInPosition(this.generateRandomPointInRoom(room));
@@ -1410,20 +1458,22 @@ class GameWindow extends React.Component {
         setTimeout(_ => GM.focusToPlayer(), 0);
 
         const pressedKeys = [];
-        $('body').get(0).addEventListener('keyup', e => pressedKeys[e.keyIdentifier] = false );
+        $('body').get(0).addEventListener('keyup', e => pressedKeys[e.keyCode] = false );
         $('body').get(0).addEventListener('keydown', e => {
-            pressedKeys[e.keyIdentifier] = true;
-            if (pressedKeys['Right'] || pressedKeys['Left'] || pressedKeys['Up'] || pressedKeys['Down'] || pressedKeys['U+0020'])
+            pressedKeys[e.keyCode] = true;
+            if (pressedKeys[39] || pressedKeys[37] || pressedKeys[38] || pressedKeys[40] || pressedKeys[32])
                 e.preventDefault(); 
         });
 
         setInterval(_ => {
-            if (pressedKeys['Right']) GM.playerMove('Right');
-            if (pressedKeys['Up']) GM.playerMove('Up');
-            if (pressedKeys['Left']) GM.playerMove('Left');
-            if (pressedKeys['Down']) GM.playerMove('Down');
+            if (pressedKeys[39]) GM.playerMove('Right');
+            if (pressedKeys[38]) GM.playerMove('Up');
+            if (pressedKeys[37]) GM.playerMove('Left');
+            if (pressedKeys[40]) GM.playerMove('Down');
 
-            if (pressedKeys['U+0020']) GM.playerAttack();
+            if (pressedKeys[32]) GM.playerAttack();
+
+            if (pressedKeys[65] && pressedKeys[83] && pressedKeys[68] && pressedKeys[70]) PM.player.cheat();
         }, 40);
     }
 
@@ -1476,6 +1526,7 @@ class GameWindow extends React.Component {
                                     <li> You can hold space button to maximize your DPS </li>
                                     <li> Picking up another weapon overrides your current one only if it is better.</li>
                                     <li> Make sure to reach a high level before fighting the boss </li>
+                                    <li> If RNJesus hates you, you may not be able to facetank the boss although you cleared out the whole map </li>
                                     <li> You will know its the boss when you see it </li>
                                 </ul>
                                 <dismiss onClick={this.start.bind(this)}> Close </dismiss>
