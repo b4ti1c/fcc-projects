@@ -662,6 +662,11 @@ class NPC extends Creature {
 
     moveRandom() {
         this.mover = setInterval(() => {
+            let maxMoveRange = PM.player.vision + 2;
+            if (maxMoveRange > 12) maxMoveRange = 12;
+
+            if ((Math.pow(PM.player.top - this.top, 2) + Math.pow(PM.player.left - this.left, 2)) > Math.pow(maxMoveRange * CellSize, 2)) return;
+
             let direction = ['Up', 'Down', 'Left', 'Right'].sort((a, b) => Math.random() > 0.5)[0];
             let alt_direction = '';
             const others = GM.getOtherCreatures(this);
@@ -698,17 +703,14 @@ class NPC extends Creature {
                 }
             }
 
-            let maxMoveRange = PM.player.vision + 2;
-            if (maxMoveRange > 12) maxMoveRange = 12;
-
-            if ((Math.pow(PM.player.top - this.top, 2) + Math.pow(PM.player.left - this.left, 2)) < Math.pow(maxMoveRange * CellSize, 2))
-                this
-                    .move(direction)
-                    .catch(err => { 
-                        //console.log(`Monster cant move to ${direction}. Will try ${alt_direction}`);
-                        return this.move(alt_direction);
-                    })
-                    .catch(err => {/* console.log('Cant move there either, giving up...') */ });
+            
+            this
+                .move(direction)
+                .catch(err => { 
+                    //console.log(`Monster cant move to ${direction}. Will try ${alt_direction}`);
+                    return this.move(alt_direction);
+                })
+                .catch(err => {/* console.log('Cant move there either, giving up...') */ });
         }, 250 + Math.random() * 10);
     }
 
