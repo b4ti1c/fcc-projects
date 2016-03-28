@@ -39,7 +39,6 @@ cell {
   padding: 0;
   margin: 0;
   background-size: cover;
-  z-index: 1;
 }
 /* line 42, index.sass */
 cell.player, cell.creature {
@@ -47,19 +46,13 @@ cell.player, cell.creature {
   position: absolute;
   color: white;
 }
-/* line 46, index.sass */
-cell.creature:not(.dead) {
-  z-index: 3;
-}
-/* line 48, index.sass */
-cell.creature.dead {
-  z-index: 2;
-}
-/* line 50, index.sass */
-cell.player {
-  z-index: 3;
-}
 /* line 52, index.sass */
+cell.player cell-content {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+/* line 56, index.sass */
 cell playerrange {
   background: rgba(255, 255, 255, 0.2);
   position: absolute;
@@ -71,7 +64,7 @@ cell playerrange {
   z-index: 0;
 }
 
-/* line 62, index.sass */
+/* line 66, index.sass */
 pickup-text {
   display: block;
   position: absolute;
@@ -79,7 +72,7 @@ pickup-text {
   z-index: 3;
 }
 
-/* line 68, index.sass */
+/* line 72, index.sass */
 healthbar, healthfill {
   display: block;
   position: absolute;
@@ -88,7 +81,7 @@ healthbar, healthfill {
   z-index: 4;
 }
 
-/* line 75, index.sass */
+/* line 79, index.sass */
 cell-overlay {
   display: block;
   position: absolute;
@@ -100,20 +93,20 @@ cell-overlay {
   right: 0;
   margin: auto;
 }
-/* line 85, index.sass */
+/* line 89, index.sass */
 cell-overlay.revealed:not(.fogged) {
   background: transparent;
 }
-/* line 87, index.sass */
+/* line 91, index.sass */
 cell-overlay.revealed.fogged {
   background: rgba(0, 0, 0, 0.6);
 }
-/* line 89, index.sass */
+/* line 93, index.sass */
 cell-overlay:not(.revealed).fogged {
   background: black;
 }
 
-/* line 92, index.sass */
+/* line 96, index.sass */
 cell-content {
   position: absolute;
   text-align: center;
@@ -123,7 +116,7 @@ cell-content {
   z-index: 2;
 }
 
-/* line 100, index.sass */
+/* line 104, index.sass */
 hud {
   display: block;
   position: fixed;
@@ -131,13 +124,13 @@ hud {
   left: 20px;
   z-index: 5;
 }
-/* line 106, index.sass */
+/* line 110, index.sass */
 hud huditem {
   display: inline-block;
   margin-left: 15px;
 }
 
-/* line 110, index.sass */
+/* line 114, index.sass */
 starter {
   display: block;
   position: fixed;
@@ -155,28 +148,28 @@ starter {
   overflow: scroll;
   text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black;
 }
-/* line 126, index.sass */
+/* line 130, index.sass */
 starter heading {
   display: block;
   font-size: 46px;
   cursor: default;
 }
-/* line 130, index.sass */
+/* line 134, index.sass */
 starter heading2 {
   display: block;
   font-size: 36px;
   cursor: default;
 }
-/* line 134, index.sass */
+/* line 138, index.sass */
 starter ul {
   text-align: left;
 }
-/* line 136, index.sass */
+/* line 140, index.sass */
 starter ul li {
   cursor: default;
   font-size: 18px;
 }
-/* line 139, index.sass */
+/* line 143, index.sass */
 starter dismiss {
   display: block;
   font-size: 36px;
@@ -188,13 +181,13 @@ starter dismiss {
   width: 100px;
   margin: 10px auto;
 }
-/* line 149, index.sass */
+/* line 153, index.sass */
 starter dismiss:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-/* line 155, index.sass */
+/* line 159, index.sass */
 ender {
   display: block;
   position: fixed;
@@ -212,12 +205,12 @@ ender {
   cursor: default;
   z-index: 9;
 }
-/* line 171, index.sass */
+/* line 175, index.sass */
 ender msg {
   display: block;
   cursor: default;
 }
-/* line 174, index.sass */
+/* line 178, index.sass */
 ender rld {
   display: block;
   cursor: pointer;
@@ -229,7 +222,7 @@ ender rld {
   border: 1px solid wheat;
   border-radius: 5px;
 }
-/* line 184, index.sass */
+/* line 188, index.sass */
 ender rld:hover {
   background: rgba(255, 255, 255, 0.1);
   color: white;

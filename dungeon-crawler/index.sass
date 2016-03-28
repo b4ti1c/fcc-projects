@@ -38,17 +38,21 @@ cell
     padding: 0
     margin: 0
     background-size: cover
-    z-index: 1
+    // z-index: 1
     &.player, &.creature 
         display: block
         position: absolute
         color: white
-    &.creature:not(.dead)
-        z-index: 3
-    &.creature.dead
-        z-index: 2
+    // &.creature:not(.dead)
+    //     z-index: 3
+    // &.creature.dead
+    //     z-index: 2
     &.player
-        z-index: 3
+        // z-index: 3
+        cell-content
+            background-size: contain
+            background-repeat: no-repeat
+            background-position: center center
     playerrange 
         background: rgba(255,255,255,0.2)
         position: absolute
