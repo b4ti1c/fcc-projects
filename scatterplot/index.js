@@ -109,13 +109,14 @@ $.getJSON(url, records => {
     const riders = chart
         .selectAll('.rider')
         .data(records)
-        .enter()
+        .enter();
 
     const rider = riders
         .append('g')
         .attr('class', 'rider')
         .attr('transform', record => `translate(${xScale(record.dateTime)}, ${yScale(record.Place)})`)
         .on('mouseenter', record => tooltip.load(record))
+        .on('mousemove', record => {})
         .on('mouseout', _ => tooltip.hide());
 
 
