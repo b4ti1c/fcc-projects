@@ -1,0 +1,98 @@
+@import compass
+
+$primary: wheat
+$secondary: black
+$bg-color: rgb(0,0,125)
+$light-bg: rgba(255,255,255,0.1)
+$dark-bg: rgba(255,255,255,0.3)
+$border-color: rgb(60,60,60)
+$font: Helvetica Neue
+
+html
+    body
+        width: 100%
+        height: 100%
+        top: 0
+        left: 0
+        margin: 0
+        padding: 0
+        position: absolute
+        @include user-select(none)
+        font-size: 20px
+        font-family: $font
+        font-weight: 100
+        color: $primary
+
+background
+    display: block
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    min-height: 100%
+    box-sizing: border-box
+    +background-image(radial-gradient(center center, $bg-color 0%, $secondary 100%))
+    background-size: cover
+    z-index: -1
+
+
+.headline
+    text-align: center
+    width: 750px
+    color: white
+    font-weight: 100
+    left: 0
+    right: 0
+    margin: 50px auto
+    margin-bottom: 30px
+    cursor: default
+
+.chart
+    position: absolute
+    left: 0
+    right: 0
+    margin: auto
+    margin-bottom: 30px
+    g.axis
+        fill: white
+        text
+            font: 10px sans-serif
+            cursor: default
+        path, line
+            cursor: default
+            width: 1px
+            fill: none
+            stroke: white
+            stroke-width: 1
+            shape-rendering: crispEdges
+    g.rider
+        cursor: pointer
+        circle
+            fill: wheat 
+        text
+            fill: wheat
+            font-size: 10px
+        &:hover
+            circle, text
+                fill: steelblue
+
+tooltip 
+    display: block
+    color: white
+    position: absolute
+    font-size: 15px
+    background: rgba(0,0,0,0.8)
+    margin: auto
+    width: 120px
+    padding: 10px
+    border-radius: 10px
+    border: 1px solid wheat
+    z-index: 1
+    opacity: 0
+    +transition(opacity .2s)
+    +transition-timing-function(ease)
+    &.info
+        opacity: 1
+    amount, value
+        display: block
+
